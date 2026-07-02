@@ -272,11 +272,11 @@ async function synchronizeMyEnrollments() {
                     <div class="course-actions" style="padding: 0 1.25rem 1.25rem 1.25rem; display: flex; gap: 0.75rem; width: 100%; box-sizing: border-box;">
                         
                         <!-- 🚀 Enter Classroom Button (Takes more proportional width) -->
-                        <button class="btn-card-enter" 
-                                onclick="enterCourseWorkspace('${enrollment.course_code}', '${escape(enrollment.course_title)}')"
-                                style="flex: 2; background: #10b981; border: none; color: white; padding: 0.75rem; border-radius: 0.5rem; cursor: pointer; font-weight: 700; transition: background 0.2s ease;">
-                            🚪 Enter
-                        </button>
+                      <button class="btn-card-enter" 
+        onclick="enterCourseWorkspace('${enrollment.course_code.trim()}')"
+        style="flex: 2; background: #10b981; border: none; color: white; padding: 0.75rem; border-radius: 0.5rem; cursor: pointer; font-weight: 700; transition: background 0.2s ease;">
+    🚪 Enter
+</button>
                         
                         <!-- ❌ Drop Button (Adjusted flex properties to sit cleanly next to Enter) -->
                         <button class="btn-card-drop" 
@@ -298,11 +298,9 @@ async function synchronizeMyEnrollments() {
             </div>`;
     }
 }
-function enterCourseWorkspace(courseCode, escapedCourseTitle) {
+function enterCourseWorkspace(courseCode) {
     const mainWorkspaceContainer = document.getElementById('dashboard-content-container');
     if (!mainWorkspaceContainer) return;
-
-    const decodedTitle = unescape(escapedCourseTitle);
 
     // Render an instantaneous loader state matching your dark aesthetic
     mainWorkspaceContainer.innerHTML = `
@@ -312,7 +310,7 @@ function enterCourseWorkspace(courseCode, escapedCourseTitle) {
         </div>`;
 
     // Make an asynchronous call to your Django view, passing the code cleanly as a query parameter
-    fetch(`/course-content.html?code=${courseCode}`)
+    fetch(`/course-content.html?code=${encodeURIComponent(courseCode)}`)
         .then(response => {
             if (!response.ok) throw new Error("Could not download dynamic course materials.");
             return response.text();
@@ -330,6 +328,7 @@ function enterCourseWorkspace(courseCode, escapedCourseTitle) {
                     <p class="empty-state-message" style="color: #94a3b8;">${err.message}</p>
                 </div>`;
         });
+}
 }
 
 // ✅ FIXED: Completely remmapped variables to use dynamic registration number strings
