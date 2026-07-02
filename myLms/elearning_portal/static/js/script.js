@@ -329,7 +329,7 @@ function enterCourseWorkspace(courseCode) {
                 </div>`;
         });
 }
-}
+
 
 // ✅ FIXED: Completely remmapped variables to use dynamic registration number strings
 async function executeStudentEnrollment(courseCode, courseTitle, lecturerName) {
