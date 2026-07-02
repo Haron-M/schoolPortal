@@ -49,6 +49,30 @@ async function loadPage(page) {
         console.error("Error loading the page:", error);
     }
 }
+function loadCourseWorkspace(courseId) {
+    // Show a quick content frame loading feedback state
+    document.getElementById('dashboard-content-container').innerHTML = '<div class="catalog-loader">Loading workspace assets...</div>';
+
+    // Request the fragment by attaching the specific course ID as a GET query parameter
+    fetch(`/course-content.html?id=${courseId}`)
+        .then(response => {
+            if (!response.ok) throw new Error("Workspace data matching this ID could not be located.");
+            return response.text();
+        })
+        .then(htmlFragment => {
+            // Inject the custom classroom straight into the workspace container
+            document.getElementById('dashboard-content-container').innerHTML = htmlFragment;
+        })
+        .catch(err => {
+            console.error('Routing Error:', err);
+            document.getElementById('dashboard-content-container').innerHTML = `
+                <div class="empty-state-container">
+                    <div class="empty-state-icon">⚠️</div>
+                    <div class="empty-state-title">Failed to launch workspace</div>
+                    <div class="empty-state-message">${err.message}</div>
+                </div>`;
+        });
+}
 
 // Automatically load the dashboard tab when the user first opens the application
 document.addEventListener('DOMContentLoaded', () => {
@@ -225,27 +249,42 @@ async function synchronizeMyEnrollments() {
         enrollmentRecords.forEach(enrollment => {
             const structuralImageCover = `https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=600&q=80&sig=${enrollment.course_code}`;
 
-            // 🟢 Self-contained layout mappings linked directly to the enrollments table parameters
+            // 🟢 Self-contained layout mappings with new side-by-side action buttons
             const cardNodeMarkup = `
                 <div class="course-card" style="background: rgba(2, 14, 46, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1rem; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.2s ease;">
                     <div class="course-image" style="position: relative; width: 100%; height: 180px; overflow: hidden;">
-                        <span class="year-badge" style="position: absolute; top: 12px; left: 12px; background: #3b82f6; color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; z-index: 2;">
+                        <span class="year-badge" style="position: absolute; top: 12px; left: auto; right: 12px; background: #f7ca44; color: #0b132b; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; z-index: 2;">
                             Year 2
                         </span>
                         <img src="${structuralImageCover}" alt="${enrollment.course_title} Cover" style="width: 100%; height: 100%; object-fit: cover;">
                     </div>
+                    
                     <div class="course-info" style="padding: 1.25rem; flex-grow: 1; display: flex; flex-direction: column; gap: 0.5rem;">
-                        <span class="course-code" style="color: #3b82f6; font-size: 0.85rem; font-weight: 600;">🆔 ${enrollment.course_code}</span>
+                        <span class="course-code" style="color: #f7ca44; font-size: 0.85rem; font-weight: 700;">🆔 ${enrollment.course_code}</span>
                         <h3 style="margin: 0; font-size: 1.2rem; color: #ffffff; line-height: 1.4;">${enrollment.course_title}</h3>
                         <div class="lecturer-info" style="display: flex; align-items: center; gap: 0.5rem; color: #94a3b8; font-size: 0.9rem; margin-top: auto; padding-top: 0.5rem;">
-                            <span>👨‍🏫</span>
-                            <span>${enrollment.lecturer_name || 'Department Faculty'}</span>
+                          <span>👨‍🏫</span>
+                          <span>${enrollment.lecturer_name || 'Department Faculty'}</span>
                         </div>
                     </div>
-                    <div class="course-actions" style="padding: 0 1.25rem 1.25rem 1.25rem;">
-                        <button class="btn-card-drop" onclick="cancelEnrollment('${enrollment.id}')">
-                            ❌ Unenrol me
+                    
+                    <!-- NEW: SIDE-BY-SIDE BUTTON GROUP -->
+                    <div class="course-actions" style="padding: 0 1.25rem 1.25rem 1.25rem; display: flex; gap: 0.75rem; width: 100%; box-sizing: border-box;">
+                        
+                        <!-- 🚀 Enter Classroom Button (Takes more proportional width) -->
+                        <button class="btn-card-enter" 
+                                onclick="enterCourseWorkspace('${enrollment.course_code}', '${escape(enrollment.course_title)}')"
+                                style="flex: 2; background: #10b981; border: none; color: white; padding: 0.75rem; border-radius: 0.5rem; cursor: pointer; font-weight: 700; transition: background 0.2s ease;">
+                            🚪 Enter
                         </button>
+                        
+                        <!-- ❌ Drop Button (Adjusted flex properties to sit cleanly next to Enter) -->
+                        <button class="btn-card-drop" 
+                                onclick="cancelEnrollment('${enrollment.id}')"
+                                style="flex: 1.2; background: #f7ca44; border: none; color: #020e2e; padding: 0.75rem; border-radius: 0.5rem; cursor: pointer; font-weight: 700; transition: background 0.2s ease; white-space: nowrap; font-size: 0.85rem;">
+                            Drop
+                        </button>
+                        
                     </div>
                 </div>`;
             gridContainer.insertAdjacentHTML('beforeend', cardNodeMarkup);
@@ -258,6 +297,39 @@ async function synchronizeMyEnrollments() {
                 <p>${err.message || 'Check database table configurations.'}</p>
             </div>`;
     }
+}
+function enterCourseWorkspace(courseCode, escapedCourseTitle) {
+    const mainWorkspaceContainer = document.getElementById('dashboard-content-container');
+    if (!mainWorkspaceContainer) return;
+
+    const decodedTitle = unescape(escapedCourseTitle);
+
+    // Render an instantaneous loader state matching your dark aesthetic
+    mainWorkspaceContainer.innerHTML = `
+        <div class="catalog-loader" style="color: #94a3b8; padding: 4rem; text-align: center;">
+            <div style="font-size: 2rem; margin-bottom: 1rem;">🔄</div>
+            Synchronizing curriculum modules for ${courseCode}...
+        </div>`;
+
+    // Make an asynchronous call to your Django view, passing the code cleanly as a query parameter
+    fetch(`/course-content.html?code=${courseCode}`)
+        .then(response => {
+            if (!response.ok) throw new Error("Could not download dynamic course materials.");
+            return response.text();
+        })
+        .then(htmlSnippet => {
+            // Inject the dynamic dashboard content straight into view
+            mainWorkspaceContainer.innerHTML = htmlSnippet;
+        })
+        .catch(err => {
+            console.error("Classroom entry breakdown:", err);
+            mainWorkspaceContainer.innerHTML = `
+                <div class="empty-state-container" style="text-align: center; padding: 4rem 2rem; margin: 2rem auto; max-width:550px;">
+                    <div class="empty-state-icon">⚠️</div>
+                    <h2 class="empty-state-title" style="color: white;">Workspace Load Failure</h2>
+                    <p class="empty-state-message" style="color: #94a3b8;">${err.message}</p>
+                </div>`;
+        });
 }
 
 // ✅ FIXED: Completely remmapped variables to use dynamic registration number strings

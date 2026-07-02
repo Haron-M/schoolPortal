@@ -303,6 +303,48 @@ body {
     z-index: 140;
 }
 
+/* Container to place Enter and Drop buttons side-by-side */
+.card-actions-group {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+    width: 100%;
+}
+
+/* Base style for the new Enter button */
+.btn-card-enter {
+    flex: 2;
+    /* Takes up more proportional space than the drop button */
+    background: #10b981 !important;
+    /* Clean emerald green accent for entry success */
+    border: none !important;
+    color: #ffffff !important;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-weight: 700 !important;
+    transition: all 0.2s ease;
+}
+
+.btn-card-enter:hover {
+    background: #059669 !important;
+    /* Darker emerald green on hover */
+}
+
+/* Adjust your existing Drop button to share the width instead of taking up 100% */
+.btn-card-drop {
+    flex: 1;
+    /* Takes up less space comparatively */
+    background: #f7ca44 !important;
+    border: none !important;
+    color: #020e2e !important;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-weight: 700 !important;
+    transition: all 0.2s ease;
+}
+
 @media (max-width: 1024px) {
     #hamburger-btn {
         display: block;

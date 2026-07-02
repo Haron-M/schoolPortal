@@ -1,0 +1,187 @@
+<div class="course-workspace-container">
+    <style>
+        /* Premium Core Workspace Styling */
+        .workspace-header {
+            background: rgba(2, 14, 46, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .workspace-title {
+            margin: 0 0 0.5rem 0;
+            font-size: 1.85rem;
+            color: #ffffff;
+        }
+
+        .workspace-meta {
+            color: #f7ca44;
+            font-weight: 700;
+            font-size: 0.95rem;
+            display: inline-block;
+            margin-bottom: 0.5rem;
+        }
+
+        .workspace-desc {
+            margin: 0;
+            color: #94a3b8;
+            line-height: 1.6;
+        }
+
+        /* Modules Syllabus Layout */
+        .modules-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .module-card {
+            background: #23304c;
+            border-radius: 1rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .module-card h3 {
+            margin: 0 0 1rem 0;
+            font-size: 1.3rem;
+            color: #ffffff;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 0.5rem;
+        }
+
+        .lessons-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .lesson-item-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: #94a3b8;
+            text-decoration: none;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+            background: rgba(2, 14, 46, 0.3);
+        }
+
+        .lesson-item-link:hover {
+            color: #f7ca44;
+            background: rgba(247, 202, 68, 0.1);
+            padding-left: 1rem;
+        }
+
+        .empty-workspace-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            background: rgba(2, 14, 46, 0.5);
+            border: 2px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            color: #94a3b8;
+        }
+    </style>
+
+    <!-- Header Frame Mapping -->
+    <div class="workspace-header">
+        <span class="workspace-meta">📋 Course Code: <span id="workspace-code-display">{{ course_code }}</span></span>
+        <h2 class="workspace-title" id="workspace-title-display">Loading Course Title...</h2>
+        <p class="workspace-desc" id="workspace-desc-display">Synchronizing academic module parameters from institutional registries...</p>
+    </div>
+
+    <!-- Syllabus Content Node -->
+    <div class="modules-grid" id="workspace-modules-mount">
+        <div class="catalog-loader" style="color: #94a3b8; text-align: center; padding: 2rem;">
+            🔄 Building dynamic class curriculum parameters...
+        </div>
+    </div>
+</div>
+
+<!-- Reactive Hydration Script Block -->
+<script>
+    (async function initializeWorkspaceView() {
+        const targetCode = "{{ course_code }}";
+        const modulesMount = document.getElementById('workspace-modules-mount');
+        
+        try {
+            // 1. Optional client-side lookup if you want to pull additional metadata from a 'courses' table via Supabase
+            const { data: courseData, error: courseErr } = await _supabase
+                .from('courses')
+                .select('title, description')
+                .eq('code', targetCode)
+                .single();
+
+            if (!courseErr && courseData) {
+                document.getElementById('workspace-title-display').innerText = courseData.title;
+                document.getElementById('workspace-desc-display').innerText = courseData.description || 'No course description provided.';
+            } else {
+                // Fallback text if course is verified but metadata table description isn't used yet
+                document.getElementById('workspace-title-display').innerText = `Classroom Resource Portal`;
+            }
+
+            // 2. Fetch syllabus modules mapped specifically to this course code
+            const { data: modules, error: modErr } = await _supabase
+                .from('course_modules')
+                .select('id, title, lessons:course_lessons(id, title, resource_url)')
+                .eq('course_code', targetCode)
+                .order('id', { ascending: true });
+
+            if (modErr) throw modErr;
+
+            if (!modules || modules.length === 0) {
+                modulesMount.innerHTML = `
+                    <div class="empty-workspace-state">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">📂</div>
+                        <h3>No Content Discovered</h3>
+                        <p>Your lecturer hasn't compiled or published learning modules for this syllabus track yet.</p>
+                    </div>`;
+                return;
+            }
+
+            // 3. Clear the loader and inject the structure dynamically
+            modulesMount.innerHTML = '';
+            
+            modules.forEach(module => {
+                let lessonsMarkup = '';
+                
+                if (module.lessons && module.lessons.length > 0) {
+                    module.lessons.forEach(lesson => {
+                        lessonsMarkup += `
+                            <li>
+                                <a href="${lesson.resource_url || '#'}" target="_blank" class="lesson-item-link">
+                                    📄 ${lesson.title}
+                                </a>
+                            </li>`;
+                    });
+                } else {
+                    lessonsMarkup = `<li style="color: #64748b; padding: 0.5rem; font-style: italic;">No reading items uploaded inside this module.</li>`;
+                }
+
+                const moduleCard = `
+                    <div class="module-card">
+                        <h3>📦 ${module.title}</h3>
+                        <ul class="lessons-list">
+                            ${lessonsMarkup}
+                        </ul>
+                    </div>`;
+                    
+                modulesMount.insertAdjacentHTML('beforeend', moduleCard);
+            });
+
+        } catch (err) {
+            console.error("Workspace render stalled:", err);
+            modulesMount.innerHTML = `
+                <div class="empty-workspace-state" style="border-color: #ff6b6b; color: #ff6b6b;">
+                    <h3>⚠️ Processing Interrupted</h3>
+                    <p>${err.message || 'Verification token issue or missing curriculum database tables.'}</p>
+                </div>`;
+        }
+    })();
+</script>

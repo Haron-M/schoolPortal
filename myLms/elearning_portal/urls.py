@@ -10,4 +10,5 @@ urlpatterns = [
     path('courses.html', views.courses_fragment, name='fragment_courses'),
     path('enrollment.html', views.enrollment_fragment, name='fragment_enrollment'),
     path('admin.html', views.admin_fragment, name='fragment_admin'),
+    path('course-content.html', views.course_content_fragment, name='course_content_fragment'),
 ]
