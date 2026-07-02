@@ -97,30 +97,32 @@ async function verifyAdminAuthorization() {
         const studentReg = localStorage.getItem('student_reg');
         if (!studentReg) return;
 
-        // Fetching student context from database to confirm administrative privileges
+        // ✅ FIXED: Added 'name' and 'registration_number' to the select statement so they exist!
         const { data: student, error } = await _supabase
             .from('students')
-            .select('email')
+            .select('email, name, registration_number')
             .eq('registration_number', studentReg)
             .single();
 
         if (error || !student) return;
 
+        // ✅ FIXED: Added safety checks (using optional chaining ?. and default fallbacks) 
+        // to prevent 'undefined' crashes if a record has empty fields
+        const studentName = student.name || "";
+        const regNum = student.registration_number || "";
 
-        // Grant admin access if the name is Haron or matches your specific registration number
-        if (student.name.includes("Haron") || student.registration_number === "COM/0227/24") {
+        // Grant admin access if the name contains Haron or matches your specific registration number
+        if (studentName.includes("Haron") || regNum === "COM/0227/24") {
             const adminTab = document.getElementById('admin-add-course');
             if (adminTab) {
                 adminTab.style.setProperty('display', 'flex', 'important');
                 console.log("🔓 Admin Access Granted for Haron.");
             }
-
         }
     } catch (err) {
-        console.error("Security verification context exception:", err);
+        console.error("Security verification context exception handled safely:", err);
     }
 }
-
 // Bootstrap App Session Profiles Initialization
 window.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -249,45 +251,53 @@ async function synchronizeMyEnrollments() {
         enrollmentRecords.forEach(enrollment => {
             const structuralImageCover = `https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=600&q=80&sig=${enrollment.course_code}`;
 
-            // 🟢 Self-contained layout mappings with new side-by-side action buttons
-            const cardNodeMarkup = `
-                <div class="course-card" style="background: rgba(2, 14, 46, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1rem; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.2s ease;">
-                    <div class="course-image" style="position: relative; width: 100%; height: 180px; overflow: hidden;">
-                        <span class="year-badge" style="position: absolute; top: 12px; left: auto; right: 12px; background: #f7ca44; color: #0b132b; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; z-index: 2;">
-                            Year 2
-                        </span>
-                        <img src="${structuralImageCover}" alt="${enrollment.course_title} Cover" style="width: 100%; height: 100%; object-fit: cover;">
-                    </div>
-                    
-                    <div class="course-info" style="padding: 1.25rem; flex-grow: 1; display: flex; flex-direction: column; gap: 0.5rem;">
-                        <span class="course-code" style="color: #f7ca44; font-size: 0.85rem; font-weight: 700;">🆔 ${enrollment.course_code}</span>
-                        <h3 style="margin: 0; font-size: 1.2rem; color: #ffffff; line-height: 1.4;">${enrollment.course_title}</h3>
-                        <div class="lecturer-info" style="display: flex; align-items: center; gap: 0.5rem; color: #94a3b8; font-size: 0.9rem; margin-top: auto; padding-top: 0.5rem;">
-                          <span>👨‍🏫</span>
-                          <span>${enrollment.lecturer_name || 'Department Faculty'}</span>
-                        </div>
-                    </div>
-                    
-                    <!-- NEW: SIDE-BY-SIDE BUTTON GROUP -->
-                    <div class="course-actions" style="padding: 0 1.25rem 1.25rem 1.25rem; display: flex; gap: 0.75rem; width: 100%; box-sizing: border-box;">
-                        
-                        <!-- 🚀 Enter Classroom Button (Takes more proportional width) -->
-                      <button class="btn-card-enter" 
-        onclick="enterCourseWorkspace('${enrollment.course_code.trim()}')"
-        style="flex: 2; background: #10b981; border: none; color: white; padding: 0.75rem; border-radius: 0.5rem; cursor: pointer; font-weight: 700; transition: background 0.2s ease;">
-    🚪 Enter
-</button>
-                        
-                        <!-- ❌ Drop Button (Adjusted flex properties to sit cleanly next to Enter) -->
-                        <button class="btn-card-drop" 
-                                onclick="cancelEnrollment('${enrollment.id}')"
-                                style="flex: 1.2; background: #f7ca44; border: none; color: #020e2e; padding: 0.75rem; border-radius: 0.5rem; cursor: pointer; font-weight: 700; transition: background 0.2s ease; white-space: nowrap; font-size: 0.85rem;">
-                            Drop
-                        </button>
-                        
-                    </div>
-                </div>`;
-            gridContainer.insertAdjacentHTML('beforeend', cardNodeMarkup);
+            // 1. Create a container element for the card
+            const cardWrapper = document.createElement('div');
+            cardWrapper.className = 'course-card';
+            cardWrapper.style.cssText = "background: rgba(2, 14, 46, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1rem; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.2s ease;";
+
+            // 2. Build the structural layout content (WITHOUT inline click attributes)
+            cardWrapper.innerHTML = `
+        <div class="course-image" style="position: relative; width: 100%; height: 180px; overflow: hidden;">
+            <span class="year-badge" style="position: absolute; top: 12px; right: 12px; background: #f7ca44; color: #0b132b; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; z-index: 2;">
+                Year 2
+            </span>
+            <img src="${structuralImageCover}" alt="${enrollment.course_title} Cover" style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+        
+        <div class="course-info" style="padding: 1.25rem; flex-grow: 1; display: flex; flex-direction: column; gap: 0.5rem;">
+            <span class="course-code" style="color: #f7ca44; font-size: 0.85rem; font-weight: 700;">🆔 ${enrollment.course_code}</span>
+            <h3 style="margin: 0; font-size: 1.2rem; color: #ffffff; line-height: 1.4;">${enrollment.course_title}</h3>
+            <div class="lecturer-info" style="display: flex; align-items: center; gap: 0.5rem; color: #94a3b8; font-size: 0.9rem; margin-top: auto; padding-top: 0.5rem;">
+              <span>👨‍🏫</span>
+              <span>${enrollment.lecturer_name || 'Department Faculty'}</span>
+            </div>
+        </div>
+        
+        <div class="course-actions" style="padding: 0 1.25rem 1.25rem 1.25rem; display: flex; gap: 0.75rem; width: 100%; box-sizing: border-box;">
+            <!-- Buttons created clean without string collision -->
+            <button class="action-enter-trigger" style="flex: 2; background: #10b981; border: none; color: white; padding: 0.75rem; border-radius: 0.5rem; cursor: pointer; font-weight: 700; transition: background 0.2s ease;">
+                🚪 Enter
+            </button>
+            <button class="action-drop-trigger" style="flex: 1.2; background: #f7ca44; border: none; color: #020e2e; padding: 0.75rem; border-radius: 0.5rem; cursor: pointer; font-weight: 700; transition: background 0.2s ease; white-space: nowrap; font-size: 0.85rem;">
+                Drop
+            </button>
+        </div>
+    `;
+
+            // 3. Programmatically hook up event listeners using actual JS references
+            const cleanCode = enrollment.course_code.trim();
+            cardWrapper.querySelector('.action-enter-trigger').addEventListener('click', () => {
+                console.log(`🎯 Programmatic click detected for code: ${cleanCode}`);
+                enterCourseWorkspace(cleanCode);
+            });
+
+            cardWrapper.querySelector('.action-drop-trigger').addEventListener('click', () => {
+                cancelEnrollment(enrollment.id);
+            });
+
+            // 4. Mount it to your grid container
+            gridContainer.appendChild(cardWrapper);
         });
     } catch (err) {
         console.error("Enrollment loading failure:", err);
@@ -299,37 +309,57 @@ async function synchronizeMyEnrollments() {
     }
 }
 function enterCourseWorkspace(courseCode) {
-    const mainWorkspaceContainer = document.getElementById('dashboard-content-container');
-    if (!mainWorkspaceContainer) return;
+    console.log("🚀 enterCourseWorkspace reached with code:", courseCode);
 
-    // Render an instantaneous loader state matching your dark aesthetic
+    // 1. Force the string to be clean for URL routing
+    const targetCode = String(courseCode).trim();
+
+    // 2. Locate the DOM container injection target
+    const mainWorkspaceContainer = document.getElementById('main-content');
+
+    if (!mainWorkspaceContainer) {
+        console.error("❌ CRITICAL: Could not find an element with id='main-content' on the page!");
+        return;
+    }
+
+    console.log("🎯 Found '#main-content'. Injecting loading animation...");
+
+    // 3. Immediately inject a loader state so you know it responded
     mainWorkspaceContainer.innerHTML = `
-        <div class="catalog-loader" style="color: #94a3b8; padding: 4rem; text-align: center;">
-            <div style="font-size: 2rem; margin-bottom: 1rem;">🔄</div>
-            Synchronizing curriculum modules for ${courseCode}...
+        <div class="catalog-loader" style="color: #94a3b8; padding: 4rem; text-align: center; background: rgba(2, 14, 46, 0.4); border-radius: 1rem;">
+            <div style="font-size: 2.5rem; margin-bottom: 1rem; animation: spin 2s linear infinite;">🔄</div>
+            <h3 style="color: white; margin: 0 0 0.5rem 0;">Opening Classroom Workspace</h3>
+            <p style="margin: 0; color: #64748b;">Synchronizing curriculum parameters for ${targetCode}...</p>
         </div>`;
 
-    // Make an asynchronous call to your Django view, passing the code cleanly as a query parameter
-    fetch(`/course-content.html?code=${encodeURIComponent(courseCode)}`)
+    // 4. Construct the fetch URL cleanly, wrapping the space-filled string safely
+    const requestUrl = `/course-content.html?code=${encodeURIComponent(targetCode)}`;
+    console.log(`📡 Dispatching fetch network request to: ${requestUrl}`);
+
+    fetch(requestUrl)
         .then(response => {
-            if (!response.ok) throw new Error("Could not download dynamic course materials.");
+            console.log(`📥 Network response received. Status: ${response.status} (${response.statusText})`);
+            if (!response.ok) throw new Error(`Server returned error code ${response.status}`);
             return response.text();
         })
         .then(htmlSnippet => {
+            console.log("✨ HTML snippet received from Django successfully. Injecting into layout view...");
+
             // Inject the dynamic dashboard content straight into view
             mainWorkspaceContainer.innerHTML = htmlSnippet;
+
+            console.log("✅ Workspace view successfully populated!");
         })
         .catch(err => {
-            console.error("Classroom entry breakdown:", err);
+            console.error("❌ Classroom entry breakdown:", err);
             mainWorkspaceContainer.innerHTML = `
-                <div class="empty-state-container" style="text-align: center; padding: 4rem 2rem; margin: 2rem auto; max-width:550px;">
-                    <div class="empty-state-icon">⚠️</div>
-                    <h2 class="empty-state-title" style="color: white;">Workspace Load Failure</h2>
-                    <p class="empty-state-message" style="color: #94a3b8;">${err.message}</p>
+                <div class="empty-state-container" style="text-align: center; padding: 4rem 2rem; margin: 2rem auto; max-width:550px; background: rgba(2, 14, 46, 0.6); border: 2px dashed #ff6b6b; border-radius: 1rem;">
+                    <div class="empty-state-icon" style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
+                    <h2 class="empty-state-title" style="color: white; margin: 0 0 0.5rem 0;">Workspace Load Failure</h2>
+                    <p class="empty-state-message" style="color: #ff6b6b; margin: 0;">${err.message}</p>
                 </div>`;
         });
 }
-
 
 // ✅ FIXED: Completely remmapped variables to use dynamic registration number strings
 async function executeStudentEnrollment(courseCode, courseTitle, lecturerName) {

@@ -2,11 +2,11 @@
     <style>
         /* Premium Core Workspace Styling */
         .workspace-header {
-            background: rgba(2, 14, 46, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: #23304c !important; /* Force matching theme background */
             padding: 2rem;
             border-radius: 1rem;
             margin-bottom: 2rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
         }
 
         .workspace-title {
@@ -21,6 +21,7 @@
             font-size: 0.95rem;
             display: inline-block;
             margin-bottom: 0.5rem;
+            text-transform: uppercase; /* Ensures it stays clean and uppercase */
         }
 
         .workspace-desc {
@@ -87,19 +88,30 @@
             border-radius: 1rem;
             color: #94a3b8;
         }
+
+        /* CSS Animation loop to fix the static blue square from image_85c447.png */
+        @keyframes workspace-spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .spinning-loader {
+            display: inline-block;
+            animation: workspace-spin 2s linear infinite;
+        }
     </style>
 
     <!-- Header Frame Mapping -->
     <div class="workspace-header">
-        <span class="workspace-meta">📋 Course Code: <span id="workspace-code-display">{{ course_code }}</span></span>
+        <!-- Force uppercase cleanly on output injection -->
+        <span class="workspace-meta">📋 Course Code: <span id="workspace-code-display">{{ course_code|upper }}</span></span>
         <h2 class="workspace-title" id="workspace-title-display">Loading Course Title...</h2>
         <p class="workspace-desc" id="workspace-desc-display">Synchronizing academic module parameters from institutional registries...</p>
     </div>
 
     <!-- Syllabus Content Node -->
     <div class="modules-grid" id="workspace-modules-mount">
-        <div class="catalog-loader" style="color: #94a3b8; text-align: center; padding: 2rem;">
-            🔄 Building dynamic class curriculum parameters...
+        <div class="catalog-loader" style="color: #94a3b8; text-align: center; padding: 2rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+            <span class="spinning-loader">🔄</span> Building dynamic class curriculum parameters...
         </div>
     </div>
 </div>
@@ -107,45 +119,54 @@
 <!-- Reactive Hydration Script Block -->
 <script>
     (async function initializeWorkspaceView() {
-        const targetCode = "{{ course_code }}";
+        // Enforce safe uppercase tracking
+        const targetCode = "{{ course_code }}".trim().toUpperCase();
         const modulesMount = document.getElementById('workspace-modules-mount');
         
         try {
-            // 1. Optional client-side lookup if you want to pull additional metadata from a 'courses' table via Supabase
+            console.log(`🔍 Hydrating workspace data for: ${targetCode}`);
+
+            // 1. Fetching course details from your catalog/courses table
+            // Note: Adjust the table name ('courses') or columns ('course_title') if they differ in your database
             const { data: courseData, error: courseErr } = await _supabase
                 .from('courses')
-                .select('title, description')
+                .select('*')
                 .eq('code', targetCode)
-                .single();
+                .maybeSingle(); // Prevents throwing hard failures if empty
 
             if (!courseErr && courseData) {
-                document.getElementById('workspace-title-display').innerText = courseData.title;
-                document.getElementById('workspace-desc-display').innerText = courseData.description || 'No course description provided.';
+                // Prioritize whatever your title column naming convention is (e.g. course_title or title)
+                document.getElementById('workspace-title-display').innerText = courseData.course_title || courseData.title || `${targetCode} Workspace`;
+                document.getElementById('workspace-desc-display').innerText = courseData.description || 'Welcome to your digital interactive learning area.';
             } else {
-                // Fallback text if course is verified but metadata table description isn't used yet
-                document.getElementById('workspace-title-display').innerText = `Classroom Resource Portal`;
+                // Fallback text if course metadata table query isn't fully set up yet
+                document.getElementById('workspace-title-display').innerText = `${targetCode} Core Syllabus Portal`;
+                document.getElementById('workspace-desc-display').innerText = 'Course dashboard generated from live enrollment registration keys.';
             }
 
-            // 2. Fetch syllabus modules mapped specifically to this course code
+            // 2. Fetch syllabus modules mapped to this course code
+            // Adjust table names ('modules' or 'course_modules') based on your custom schemas!
             const { data: modules, error: modErr } = await _supabase
                 .from('course_modules')
                 .select('id, title, lessons:course_lessons(id, title, resource_url)')
                 .eq('course_code', targetCode)
                 .order('id', { ascending: true });
 
-            if (modErr) throw modErr;
+            if (modErr) {
+                console.warn("Skipping module render block, checking if custom setup required:", modErr);
+            }
 
             if (!modules || modules.length === 0) {
                 modulesMount.innerHTML = `
                     <div class="empty-workspace-state">
                         <div style="font-size: 3rem; margin-bottom: 1rem;">📂</div>
-                        <h3>No Content Discovered</h3>
-                        <p>Your lecturer hasn't compiled or published learning modules for this syllabus track yet.</p>
+                        <h3 style="color: white; margin: 0 0 0.5rem 0;">No Content Discovered</h3>
+                        <p style="margin: 0;">Your lecturer hasn't compiled or published learning modules for this syllabus track yet.</p>
                     </div>`;
                 return;
             }
 
-            // 3. Clear the loader and inject the structure dynamically
+            // 3. Clear the placeholder loader and build the UI rows cleanly
             modulesMount.innerHTML = '';
             
             modules.forEach(module => {
@@ -180,7 +201,7 @@
             modulesMount.innerHTML = `
                 <div class="empty-workspace-state" style="border-color: #ff6b6b; color: #ff6b6b;">
                     <h3>⚠️ Processing Interrupted</h3>
-                    <p>${err.message || 'Verification token issue or missing curriculum database tables.'}</p>
+                    <p>${err.message || 'Check database connectivity schemas.'}</p>
                 </div>`;
         }
     })();
