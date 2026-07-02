@@ -26,15 +26,8 @@ SECRET_KEY = 'django-insecure-5=-qh&b70noyib8oqi-spgqm(3ga2-wv97if20&jakuch%r#ax
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-
-# 1. Get the string from Render's environment variable
-raw_hosts = os.environ.get('ALLOWED_HOSTS', '')
-
-# 2. If Render has the variable, break it apart by commas; otherwise default to localhost
-if raw_hosts:
-    ALLOWED_HOSTS = [host.strip() for host in raw_hosts.split(',')]
-else:
-    ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'schoolportal-y1m.onrender.com']
+# Inside the active settings.py file
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
