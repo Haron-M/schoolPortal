@@ -1,0 +1,160 @@
+<!-- SYSTEM COMPONENT: ADMINISTRATIVE DEPLOYMENT CANVAS -->
+<div class="admin-provision-view">
+    <style>
+        .admin-layout-box {
+            max-width: 950px; /* Expanded width to properly host the two-column grid */
+            background: #2e3854 !important; /* Rich deep navy-grey workspace card background from image_0cddb3.png */
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 1rem;
+            padding: 2.5rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
+            margin: 0 auto;
+        }
+
+        /* The Horizontal Engine Grid Container */
+        #admin-course-form {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr); /* Splits form neatly into two symmetrical columns */
+            column-gap: 2rem;
+            row-gap: 1.5rem;
+        }
+
+        .form-structural-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 0; /* Handled gracefully by grid row-gap now */
+        }
+
+        /* Gold Headers / Labels Scheme from image_0cddb3.png */
+        .form-structural-group label {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #f7ca44 !important; /* Vivid gold contrast labeling text */
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Darkened high-contrast Input Blocks */
+        .form-structural-group input, .form-structural-group select {
+            padding: 1rem 1.25rem;
+            background: #1a2238 !important; /* Dark interior input fill contrast matching reference */
+            border: 1px solid rgba(255, 255, 255, 0.05) !important;
+            border-radius: 0.5rem;
+            color: #ffffff !important;
+            outline: none;
+            font-size: 0.95rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .form-structural-group input::placeholder {
+            color: #64748b;
+        }
+
+        .form-structural-group input:focus, .form-structural-group select:focus {
+            border-color: #f7ca44 !important;
+            box-shadow: 0 0 0 2px rgba(247, 202, 68, 0.15);
+        }
+
+        /* Action Row spanning across both grid columns */
+        .form-actions-zone {
+            grid-column: 1 / -1; /* Bridges the full length of the grid container row */
+            display: flex;
+            justify-content: flex-end; /* Snaps action submit button directly to the bottom right edge */
+            margin-top: 1rem;
+        }
+
+        /* Button Profile: Solid Yellow Block styled strictly to image_0cddb3.png specs */
+        .btn-provision-submit {
+            background: #f7ca44 !important; /* Premium warm gold solid background container */
+            border: none;
+            color: #00133d !important; /* Crisp high-contrast midnight navy action font */
+            padding: 1rem 2rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 700 !important;
+            font-size: 0.95rem;
+            transition: background-color 0.2s, transform 0.1s;
+            width: auto !important; /* Prevents button element from full stretching width */
+            min-width: 260px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 12px rgba(247, 202, 68, 0.15);
+        }
+
+        .btn-provision-submit:hover {
+            background: #e5b834 !important;
+        }
+
+        .btn-provision-submit:active {
+            transform: scale(0.98);
+        }
+
+        /* Seamless smartphone breakpoint compatibility fallbacks */
+        @media (max-width: 768px) {
+            #admin-course-form {
+                grid-template-columns: 1fr; /* Reverts layout safely to stacked columns on smaller viewports */
+            }
+            .form-actions-zone {
+                justify-content: center;
+            }
+            .btn-provision-submit {
+                width: 100% !important;
+            }
+        }
+    </style>
+
+    <!-- Header Section matches title text profile of image_0cddb3.png -->
+    <div style="margin-bottom: 2rem; text-align: left; max-width: 950px; margin-left: auto; margin-right: auto; padding: 0 0.5rem;">
+        <h1 style="margin: 0; font-size: 1.85rem; font-weight: 800; color: #15144d; display: flex; align-items: center; gap: 0.5rem;">
+            ✨ Admin Workspace
+        </h1>
+        <p style="margin: 6px 0 0 0; color: #94a3b8; font-size: 0.95rem;">
+            Provision and deploy fresh curriculum modules into the institutional student ecosystem.
+        </p>
+    </div>
+
+    <div class="admin-layout-box">
+        <form id="admin-course-form" onsubmit="handleCourseProvisioning(event)">
+            
+            <!-- Grid Cell Row 1: Left Item -->
+            <div class="form-structural-group">
+                <label for="course-code-input">Course Code</label>
+                <input type="text" id="course-code-input" placeholder="e.g., COM 211" required>
+            </div>
+
+            <!-- Grid Cell Row 1: Right Item -->
+            <div class="form-structural-group">
+                <label for="course-name-input">Course Title Name</label>
+                <input type="text" id="course-name-input" placeholder="e.g., Systems Architecture" required>
+            </div>
+
+            <!-- Grid Cell Row 2: Left Item -->
+            <div class="form-structural-group">
+                <label for="course-lecturer-input">Assigned Lecturer</label>
+                <input type="text" id="course-lecturer-input" placeholder="e.g., Dr. J. Odhiambo" required>
+            </div>
+
+            <!-- Grid Cell Row 2: Right Item -->
+            <div class="form-structural-group">
+                <label for="course-year-input">Target Academic Year</label>
+                <select id="course-year-input" required>
+                    <option value="" disabled selected>Select academic year level...</option>
+                    <option value="Year 1">Year 1 </option>
+                    <option value="Year 2">Year 2 </option>
+                    <option value="Year 3">Year 3</option>
+                    <option value="Year 4">Year 4 </option>
+                </select>
+            </div>
+
+            <!-- Submissions Row Zone aligned to the absolute bottom-right corner -->
+            <div class="form-actions-zone">
+                <button type="submit" class="btn-provision-submit">⚡ Deploy Module to Portal</button>
+            </div>
+        </form>
+    </div>
+</div>

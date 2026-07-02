@@ -1,0 +1,329 @@
+:root {
+    /* Precise HEX color extraction from image_0c07b9.png */
+    --primary: #f7ca44;
+    /* Rich warm yellow sidebar */
+    --primary-hover: #e5b834;
+    /* Deeper gold hover tone */
+    --primary-light: #fffdf2;
+    --dark: #00133d;
+    /* Deep midnight navy top bar & active buttons */
+    --light: #f1f5f9;
+    /* Light clean slate page background */
+    --border: #e2e8f0;
+    --text-main: #0b132b;
+    /* High contrast dark blue-black for content titles */
+    --text-muted: #64748b;
+    --sidebar-width: 260px;
+    --header-height: 70px;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+body {
+    background-color: var(--light);
+    color: var(--text-main);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* ---------------------------------
+   Top Header Section (Full Width, Complete Visibility)
+   --------------------------------- */
+#top-header {
+    height: var(--header-height);
+    background: var(--dark) !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 2rem;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    z-index: 200;
+    /* Keeps header rendering completely above all layout layers */
+    box-sizing: border-box;
+    color: #ffffff;
+}
+
+#top-header h3 {
+    color: #ffffff !important;
+    font-size: 1.35rem;
+    font-weight: 700;
+}
+
+/* ---------------------------------
+   App Viewport Architecture (No Structural Overlaps)
+   --------------------------------- */
+#app-viewport {
+    display: flex;
+    flex-direction: row;
+    margin-top: var(--header-height);
+    /* Essential: Drops layout bounds completely clear of top bar */
+    flex-grow: 1;
+    min-width: 0;
+}
+
+/* Left Navigation Sidebar (Snaps perfectly to bottom edge of Top Header) */
+#sidebar {
+    width: var(--sidebar-width);
+    background: var(--primary) !important;
+    border-right: 1px solid var(--primary-hover);
+    display: flex;
+    flex-direction: column;
+    padding: 2rem 1rem;
+    position: fixed;
+    top: var(--header-height);
+    /* Begins exactly at the bottom of the top header */
+    bottom: 0;
+    left: 0;
+    z-index: 150;
+    box-sizing: border-box;
+    height: 100%;
+}
+
+
+/* Push the sign-out button to the absolute bottom of the flex column */
+.nav-item.sign-out-btn {
+    margin-top: auto;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    /* Optional: clean divider line */
+    color: #ff4d4d;
+    /* Optional: gives it a distinct sign-out look */
+}
+
+.nav-item.sign-out-btn:hover {
+    background-color: rgba(255, 77, 77, 0.15);
+}
+
+/* Main Content Area Container */
+#main-content {
+    margin-left: var(--sidebar-width);
+    /* Creates structural buffer wall matching sidebar panel width */
+    padding: 2.5rem;
+    flex-grow: 1;
+    min-width: 0;
+    box-sizing: border-box;
+}
+
+/* ---------------------------------
+   Navigation Links & Tab Highlights
+   --------------------------------- */
+.nav-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    color: #1e293b !important;
+    /* Clear legible dark option labels on yellow background */
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.nav-item:hover {
+    background-color: rgba(0, 19, 61, 0.08);
+    color: #1e293b !important;
+}
+
+/* Active Highlight state matching Browse Courses menu item selection */
+.nav-item.active {
+    background-color: var(--dark) !important;
+    color: #ffffff !important;
+    /* Inverts item text to high-contrast white */
+    font-weight: 600;
+    box-shadow: 0 4px 6px -1px rgba(0, 19, 61, 0.2);
+}
+
+/* ---------------------------------
+   Profile Architecture Overrides
+   --------------------------------- */
+.profile-container {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.profile-info h4 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #ffffff;
+}
+
+.profile-info p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--primary);
+    opacity: 0.9;
+}
+
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: #ffffff;
+    border: 2px solid var(--primary);
+}
+
+/* ---------------------------------
+   Fast Enroll / Card Action Buttons (Solid Yellow Blocks)
+   --------------------------------- */
+.btn-card-enroll,
+.course-card button,
+.course-actions button {
+    width: 100%;
+    background-color: var(--primary) !important;
+    /* Solid yellow button container fill */
+    color: var(--dark) !important;
+    /* Deep navy inner action font */
+    border: none !important;
+    padding: 0.85rem;
+    border-radius: 0.5rem;
+    font-weight: 700 !important;
+    /* Crisp weight definition */
+    font-size: 0.95rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: background-color 0.2s ease;
+}
+
+.btn-card-enroll:hover {
+    background-color: var(--primary-hover) !important;
+}
+
+/* Logout Button Adjustment */
+.btn-logout {
+    width: 100%;
+    padding: 0.65rem;
+    border: 1px solid rgba(0, 19, 61, 0.15) !important;
+    background-color: rgba(255, 255, 255, 0.25) !important;
+    color: var(--dark) !important;
+    border-radius: 0.375rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: auto;
+    /* Pushes button to bottom boundary of sidebar flex matrix */
+}
+
+.btn-logout:hover {
+    background-color: #ef4444 !important;
+    color: #ffffff !important;
+    border-color: #ef4444 !important;
+}
+
+/* ---------------------------------
+   Toast Notifications System
+   --------------------------------- */
+#toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.toast-card {
+    min-width: 300px;
+    max-width: 420px;
+    padding: 1rem 1.5rem;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 500;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(12px);
+}
+
+.toast-card.success {
+    background: rgba(0, 19, 61, 0.95);
+    border: 1px solid rgba(247, 202, 68, 0.4);
+}
+
+.toast-card.error {
+    background: rgba(239, 68, 68, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* ---------------------------------
+   Hamburger Menu Options & Responsiveness
+   --------------------------------- */
+#hamburger-btn {
+    display: none;
+    background: none;
+    border: none;
+    color: #ffffff;
+    font-size: 1.75rem;
+    cursor: pointer;
+}
+
+#sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 140;
+}
+
+@media (max-width: 1024px) {
+    #hamburger-btn {
+        display: block;
+    }
+
+    #sidebar {
+        top: var(--header-height);
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+
+    #sidebar.active {
+        transform: translateX(0);
+    }
+
+    #sidebar-overlay.active {
+        display: block;
+    }
+
+    #main-content {
+        margin-left: 0 !important;
+        padding: 1.5rem 1rem;
+    }
+}

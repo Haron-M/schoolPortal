@@ -1,0 +1,277 @@
+<!-- SYSTEM COMPONENT: INTERACTIVE OVERVIEW DASHBOARD PANEL -->
+<div class="dashboard-panel">
+    <style>
+        .metric-cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        /* Solid, pure dark navy background matching image_0d55af.png */
+        .metric-card {
+            background: #23304c !important; 
+            border: 1px solid rgba(255, 255, 255, 0.05) !important;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Rounded badge background frames around operational emojis */
+        .metric-icon-canvas {
+            width: 48px;
+            height: 48px;
+            background: #1a233a !important;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        /* High-contrast metrics white text styling */
+        .metric-data h3 {
+            margin: 0;
+            font-size: 1.95rem;
+            font-weight: 700;
+            color: #ffffff !important;
+        }
+
+        /* Muted typography text labels inside card bodies */
+        .metric-data p {
+            margin: 0.15rem 0 0 0;
+            font-size: 0.85rem;
+            color: #94a3b8 !important;
+        }
+
+        /* Progress Module Analytics Layout */
+        .analytics-split-view {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 900px) {
+            .analytics-split-view { grid-template-columns: 1fr; }
+        }
+
+        /* Solid deep dark navy background to match your Browse Courses view exactly */
+        .analytics-card-box {
+            background: #23304c !important;
+            border: 1px solid rgba(255, 255, 255, 0.05) !important;
+            border-radius: 1rem;
+            padding: 2rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        /* Titles updated to high-contrast white text for dark mode setup */
+        .analytics-card-box h3 {
+            color: #ffffff !important;
+            font-weight: 700;
+        }
+
+        .progress-tracking-row {
+            margin-bottom: 1.5rem;
+        }
+
+        /* Label names mapping for overall core items */
+        .progress-header-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            color: #94a3b8 !important;
+            font-weight: 500;
+        }
+
+        /* Background track for metrics bars */
+        .progress-bar-rail {
+            height: 8px;
+            background: #1a233a !important;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        /* Vivid signature yellow color matching the sidebar layout perfectly */
+        .progress-bar-fill {
+            height: 100%;
+            background: #f7ca44 !important;
+            width: 0%;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Activity Item Feed Streams */
+        #activity-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+            margin-top: 1rem;
+        }
+
+        .activity-item {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+            border-left: 2px solid rgba(255, 255, 255, 0.1) !important;
+            padding-left: 1rem;
+            position: relative;
+        }
+
+        /* Vibrant yellow indicator ticks inside logs pipeline */
+        .activity-dot {
+            width: 8px;
+            height: 8px;
+            background: #f7ca44 !important;
+            border-radius: 50%;
+            position: absolute;
+            left: -5px;
+            top: 6px;
+        }
+
+        /* Clean white text profiles for live active timeline event anchors */
+        .activity-content h4 {
+            margin: 0;
+            font-size: 0.9rem;
+            color: #ffffff !important;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+
+        /* Faded log metadata subtext fields */
+        .activity-time {
+            font-size: 0.75rem;
+            color: #64748b !important;
+            margin-top: 0.25rem;
+        }
+    </style>
+
+    <!-- Title Header Node matching your primary page layouts -->
+    <div style="margin-bottom: 2rem;">
+        <h1 style="margin: 0; font-size: 1.95rem; font-weight: 800; color: #0b132b;">Platform Operations Hub</h1>
+        <p style="margin: 5px 0 0 0; color: #64748b; font-size: 0.95rem;">Real-time parameters for course catalogs and enrollment analytics.</p>
+    </div>
+
+    <!-- Live Metrics Counter Layout Panel Grid -->
+    <div class="metric-cards-container">
+        <div class="metric-card">
+            <div class="metric-icon-canvas">📚</div>
+            <div class="metric-data">
+                <h3 id="stat-enrolled">4</h3>
+                <p>Total Enrolled</p>
+            </div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-icon-canvas">⏳</div>
+            <div class="metric-data">
+                <h3 id="stat-in-progress">4</h3>
+                <p>In Progress</p>
+            </div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-icon-canvas">✅</div>
+            <div class="metric-data">
+                <h3 id="stat-completed">0</h3>
+                <p>Completed Modules</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Analytics Split Grid Workspace -->
+    <div class="analytics-split-view">
+        
+        <div class="analytics-card-box">
+            <h3 style="margin: 0 0 1.5rem 0; font-size: 1.1rem;">Syllabus Completion Parameters</h3>
+            
+            <div class="progress-tracking-row">
+                <div class="progress-header-labels">
+                    <span>Overall Core Completion Metrics</span>
+                    <span id="overall-percent" style="color: #f7ca44 !important; font-weight: 700;">0%</span>
+                </div>
+                <div class="progress-bar-rail">
+                    <div class="progress-bar-fill" id="overall-bar"></div>
+                </div>
+            </div>
+
+            <div class="progress-tracking-row">
+                <div class="progress-header-labels">
+                    <span>Active Semester Module Allocation Load</span>
+                    <span id="semester-percent" style="color: #f7ca44 !important; font-weight: 700;">0%</span>
+                </div>
+                <div class="progress-bar-rail">
+                    <div class="progress-bar-fill" id="semester-bar"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="analytics-card-box">
+            <h3 style="margin: 0 0 1.25rem 0; font-size: 1.1rem;">System Logs</h3>
+            <!-- Target Activity Loop Node Mount -->
+            <div id="activity-container">
+                <div class="activity-item">
+                    <div class="activity-dot"></div>
+                    <div class="activity-content">
+                        <h4>Enrolled in Principles of Operating System</h4>
+                        <div class="activity-time">2h ago</div>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-dot"></div>
+                    <div class="activity-content">
+                        <h4>Enrolled in Automata Theory</h4>
+                        <div class="activity-time">1d ago</div>
+                    </div>
+                </div>
+                <div class="activity-item">
+                    <div class="activity-dot"></div>
+                    <div class="activity-content">
+                        <h4>Enrolled in System architecture</h4>
+                        <div class="activity-time">1d ago</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- NEW CONTROLLER SCRIPT: Calculates progress values automatically based on numerical elements above -->
+    <script>
+        function updateSyllabusMetrics() {
+            // Read metrics numbers safely from your dashboard DOM nodes
+            const enrolledCount = parseInt(document.getElementById('stat-enrolled').innerText) || 0;
+            const completedCount = parseInt(document.getElementById('stat-completed').innerText) || 0;
+            const inProgressCount = parseInt(document.getElementById('stat-in-progress').innerText) || 0;
+
+            // 1. Calculate Overall Completion Percent
+            let overallPercent = 0;
+            if (enrolledCount > 0) {
+                overallPercent = Math.round((completedCount / enrolledCount) * 100);
+            }
+
+            // Update Overall Core UI
+            document.getElementById('overall-percent').innerText = overallPercent + '%';
+            document.getElementById('overall-bar').style.width = overallPercent + '%';
+
+            // 2. Calculate Active Semester Progress (Completed vs what is still remaining In Progress)
+            let semesterPercent = 0;
+            const totalSemesterLoad = completedCount + inProgressCount;
+            if (totalSemesterLoad > 0) {
+                semesterPercent = Math.round((completedCount / totalSemesterLoad) * 100);
+            } else if (enrolledCount > 0 && inProgressCount === 0) {
+                semesterPercent = 100; // If everything is cleared out
+            }
+
+            // Update Semester UI
+            document.getElementById('semester-percent').innerText = semesterPercent + '%';
+            document.getElementById('semester-bar').style.width = semesterPercent + '%';
+        }
+
+        // Initialize calculations when the page mounts
+        document.addEventListener('DOMContentLoaded', updateSyllabusMetrics);
+        
+        // Fallback immediate execution in case DOMContentLoaded has already passed in dynamic views
+        updateSyllabusMetrics();
+    </script>
+</div>

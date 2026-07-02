@@ -1,0 +1,129 @@
+<!-- SYSTEM COMPONENT: STUDENT ACTIVE ENROLLMENTS VIEWER -->
+<div class="enrollment-view">
+    <style>
+        .enrollment-header {
+            margin-bottom: 2rem;
+        }
+
+        /* Color-only additions to ensure the grid items match the theme */
+        .course-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            width: 100%;
+        }
+
+        /* 
+           TARGETED COLOR OVERRIDES FOR DYNAMICALLY INJECTED ENROLLMENT CARDS
+           (Matches the deep navy, white text, and gold accents of image_0cec1a.png)
+        */
+        .course-grid > div:not(.catalog-loader):not(.empty-state-container) {
+            background-color: #23304c !important; /* Exact deep midnight navy from image_0cec1a.png */
+            border-radius: 1rem !important;
+            border: none !important;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15) !important;
+            overflow: hidden;
+        }
+
+        /* Background clean-up for internal card panels to remove light slate grey */
+        .course-grid > div > div {
+            background-color: #23304c !important;
+            color: #ffffff !important;
+        }
+
+        /* Typography & Metadata Color Alignment */
+        .course-grid h3, .course-grid .course-title {
+            color: #ffffff !important; /* High contrast white text for course titles */
+        }
+
+        .course-grid .course-code, .course-grid [class*="code"] {
+            color: #f7ca44 !important; /* Switched code color to high-contrast gold */
+            font-weight: 700;
+        }
+
+        .course-grid .course-instructor, .course-grid [class*="lecturer"], .course-grid [class*="instructor"] {
+            color: #94a3b8 !important; /* Legible clean silver-slate gray text for instructor names */
+        }
+
+        /* Academic Badge Alignment: Relocates top-left blue badge to top-right gold badge */
+        .course-grid .year-badge, .course-grid [class*="badge"] {
+            position: absolute !important;
+            top: 12px !important;
+            right: 12px !important;
+            left: auto !important;
+            background-color: #f7ca44 !important; /* Solid gold/yellow theme background */
+            color: #0b132b !important; /* High contrast dark text inside badge */
+            font-weight: 700 !important;
+        }
+
+        .btn-card-drop {
+            width: 100%;
+            background: #f7ca44 !important; /* Solid gold/yellow theme block matching image_0cec1a.png */
+            border: none !important;
+            color: #020e2e !important; /* Dark midnight contrast action font */
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 700 !important; /* Updated to match the bold text weight */
+            transition: all 0.2s ease;
+        }
+
+        .btn-card-drop:hover {
+            background: #e5b834 !important; /* Premium deeper gold hover state */
+            color: #020e2e !important;
+        }
+
+        /* Empty State Graphic Canvas Layouts */
+        .empty-state-container {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 4rem 2rem;
+            background: rgba(2, 14, 46, 0.5);
+            border: 2px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            max-width: 550px;
+            margin: 2rem auto;
+        }
+
+        .empty-state-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-state-title {
+            font-size: 1.4rem;
+            color: #fff;
+            margin: 0 0 0.5rem 0;
+        }
+
+        .empty-state-message {
+            color: #94a3b8;
+            margin: 0 0 1.5rem 0;
+        }
+
+        .empty-state-hint {
+            font-size: 0.85rem;
+            color: #64748b;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            padding-top: 1rem;
+        }
+        
+        .catalog-loader {
+            color: #94a3b8;
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 2rem;
+            font-weight: 500;
+        }
+    </style>
+
+    <div class="enrollment-header">
+        <h1 style="margin: 0; font-size: 1.75rem; color: #161164;">Your Enrolled Core Syllabus</h1>
+        <p style="margin: 5px 0 0 0; color: #94a3b8;">Monitor active learning tracking profiles and module progress parameters.</p>
+    </div>
+
+    <!-- Active Grid Mounting Output Node Box -->
+    <div class="course-grid" id="my-enrollments-grid">
+        <div class="catalog-loader">Synchronizing your active syllabus...</div>
+    </div>
+</div>

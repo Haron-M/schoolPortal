@@ -1,0 +1,112 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Learning Management Portal</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+
+    <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <aside id="sidebar">
+        <h2 style="color: var(--accent-gold); margin-bottom: 2rem; font-size: 1.4rem;">🏛️ Kabrite Institute</h2>
+        
+        <div class="nav-group">
+            <div class="nav-item active" onclick="loadPage('main.html')">🏠 Dashboard</div>
+            <div class="nav-item" onclick="loadPage('courses.html')">📖 Browse Courses</div>
+            <div class="nav-item" onclick="loadPage('enrollment.html')">📋 My Enrollments</div>
+            <div class="nav-item" id="admin-add-course" style="display: none;" onclick="loadPage('admin.html')">🛠️ Add New Course</div>
+      <div class="nav-item sign-out-btn" onclick="handleSignOut()">Sign out</div>
+        </div>
+            
+    </aside>
+
+    <main id="app-viewport">
+        <header id="top-header">
+            <button id="hamburger-btn" onclick="toggleSidebar()">☰</button>
+            
+            <h3 id="dynamic-greeting">Welcome back!</h3>
+
+            <div class="profile-container">
+                <div class="avatar-circle" id="profile-avatar">--</div>
+                <div class="profile-info">
+                    <h4 id="profile-reg-text" style="margin: 0; font-size: 0.95rem; font-weight: 700; color: #ffffff;">Loading...</h4>
+                    <p id="profile-dept-text" style="margin: 2px 0 0 0; font-size: 0.8rem; color: #94a3b8;">Department</p>
+                </div>
+            </div>
+        </header>
+
+        <div id="main-content"></div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        const SUPABASE_URL = "https://krxjblifzfburywvgeqt.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_0vU20Yh9apToYxeUdV0nXQ_JvwWTEt1";
+        
+        // This makes _supabase available to script.js and all dynamic HTML fragments
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    </script>
+
+    <script>
+        async function fetchAndPopulateHeaderMetrics() {
+            try {
+                // Get the registration code cached during authentication
+                const studentReg = localStorage.getItem('student_reg');
+                
+                if (!studentReg) {
+                    console.warn("Session anchor not found. Redirecting to gateway.");
+                    window.location.href = 'index.html';
+                    return;
+                }
+
+                // Query database for the fresh singular record match
+                const { data: student, error } = await _supabase
+                    .from('students')
+                    .select('name, registration_number, department')
+                    .eq('registration_number', studentReg)
+                    .single();
+
+                if (error) throw error;
+
+                if (student) {
+                    // 1. Extract the first name mathematically by breaking string up at spaces
+                    const fullStudentName = student.name || "Student";
+                    const firstName = fullStudentName.split(' ')[0];
+                    
+                    // Update greeting string
+                    document.getElementById('dynamic-greeting').innerText = `Welcome back, ${firstName}!`;
+                    
+                    // 2. Map real parameters to profile identification nodes
+                    document.getElementById('profile-reg-text').innerText = student.registration_number;
+                    document.getElementById('profile-dept-text').innerText = student.department;
+
+                    // 3. Optional: Extract cleanly structured initials into your avatar frame
+                    const rawInitials = fullStudentName.split(' ').map(n => n[0]).join('').toUpperCase();
+                    document.getElementById('profile-avatar').innerText = rawInitials.substring(0, 2);
+                }
+            } catch (err) {
+                console.error("Failed to parse real-time profile dimensions: ", err.message);
+                
+                // Graceful generic text parameters fallback
+                document.getElementById('dynamic-greeting').innerText = "Welcome back!";
+                document.getElementById('profile-reg-text').innerText = localStorage.getItem('student_reg') || "Unknown Student";
+                document.getElementById('profile-dept-text').innerText = "Portal User";
+            }
+        }
+
+        // Initialize verification pipeline immediately on context load
+        document.addEventListener('DOMContentLoaded', fetchAndPopulateHeaderMetrics);
+        // Fallback immediate initialization trigger
+        fetchAndPopulateHeaderMetrics();
+    </script>
+
+    <script src="{% static 'js/script.js' %}"></script>
+</body>
+</html>

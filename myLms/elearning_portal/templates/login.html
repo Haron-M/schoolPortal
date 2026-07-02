@@ -1,0 +1,326 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gateway Authentication - PortalLMS</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <style>
+        body {
+            margin: 0; padding: 0;
+            background: #01081b;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .auth-card-wrapper {
+            width: 100%;
+            max-width: 550px; /* Widened slightly to elegantly support the multi-column layout */
+            background: rgba(2, 14, 46, 0.85);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 1rem;
+            padding: 2.5rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            box-sizing: border-box;
+            transition: max-width 0.3s ease;
+        }
+
+        /* Responsive grid utility for registration inputs */
+        .form-grid-layout {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.25rem;
+        }
+
+        @media (min-width: 480px) {
+            .form-grid-layout.split-mode {
+                grid-template-columns: 1fr 1fr;
+                gap: 1rem;
+            }
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .input-group label {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
+        .input-group input, .input-group select {
+            padding: 0.85rem 1rem;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 0.5rem;
+            color: #fff;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        .input-group select {
+            appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 14px;
+        }
+
+        .input-group input:focus, .input-group select:focus { border-color: #f5c340; }
+
+        .btn-auth-trigger {
+            width: 100%;
+            padding: 0.85rem;
+            background: #f5c340;
+            border: none;
+            color: #020e2e;
+            font-weight: 700;
+            font-size: 0.95rem;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            margin-top: 0.5rem;
+        }
+
+        .btn-auth-trigger:hover { opacity: 0.9; }
+
+        .auth-toggle-hint {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+
+        .auth-toggle-hint span {
+            color: #f5c340;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        /* Custom Dynamic Toast UI System */
+        .toast-notification {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #10b981;
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .toast-notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="auth-card-wrapper" id="auth-box">
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <h2 style="margin: 0; color: #f5c340;">🏛️ Kabrite Institute Gateway</h2>
+            <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 0.85rem;" id="auth-subtitle">Log in to manage your student syllabus records</p>
+        </div>
+
+        <form id="auth-core-form">
+            <div id="dynamic-fields-hook"></div>
+            
+            <div class="form-grid-layout" id="base-auth-fields">
+                <div class="input-group" id="login-identifier-wrapper">
+                    <label for="auth-reg-num">Registration Number</label>
+                    <input type="text" id="auth-reg-num" placeholder="e.g., COM/0042/24" required>
+                </div>
+                
+                <div class="input-group">
+                    <label for="auth-password">Security Password</label>
+                    <input type="password" id="auth-password" placeholder="••••••••" required>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-auth-trigger" id="btn-auth-submit">Sign In</button>
+        </form>
+
+        <div class="auth-toggle-hint">
+            <p id="auth-toggle-msg">New student portal allocation? <span onclick="toggleAuthMode()">Create an account</span></p>
+        </div>
+    </div>
+
+    <div id="toast-message" class="toast-notification">✅ Registration successful! Redirecting...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        const SUPABASE_URL = "https://krxjblifzfburywvgeqt.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_0vU20Yh9apToYxeUdV0nXQ_JvwWTEt1";
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let isSignUpMode = false;
+        const form = document.getElementById('auth-core-form');
+        const submitBtn = document.getElementById('btn-auth-submit');
+        const subtitle = document.getElementById('auth-subtitle');
+        const toggleMsg = document.getElementById('auth-toggle-msg');
+        const dynamicHook = document.getElementById('dynamic-fields-hook');
+        const baseAuthFields = document.getElementById('base-auth-fields');
+        const authBox = document.getElementById('auth-box');
+
+        function showToast(message) {
+            const toast = document.getElementById('toast-message');
+            toast.innerText = "✅ " + message;
+            toast.classList.add('show');
+            setTimeout(() => { toast.classList.remove('show'); }, 3500);
+        }
+
+        function toggleAuthMode() {
+            isSignUpMode = !isSignUpMode;
+            if (isSignUpMode) {
+                authBox.style.maxWidth = "550px";
+                submitBtn.innerText = "Register Account";
+                subtitle.innerText = "Create a student profile to start tracking courses";
+                toggleMsg.innerHTML = `Already registered? <span onclick="toggleAuthMode()">Sign In</span>`;
+                
+                // Inject structural metadata configuration items for full registrations
+                baseAuthFields.classList.add('split-mode');
+                dynamicHook.innerHTML = `
+                    <div class="form-grid-layout split-mode">
+                        <div class="input-group">
+                            <label for="auth-name">Full Name</label>
+                            <input type="text" id="auth-name" placeholder="e.g., Haron Moenga" required>
+                        </div>
+                        <div class="input-group">
+                            <label for="auth-dept">Academic Department</label>
+                            <input type="text" id="auth-dept" placeholder="e.g., Computer Science" required>
+                        </div>
+                    </div>
+                    <div class="form-grid-layout split-mode">
+                        <div class="input-group">
+                            <label for="auth-year">Year of Study</label>
+                            <select id="auth-year" required>
+                                <option value="" disabled selected>Select level...</option>
+                                <option value="Year 1">Year 1</option>
+                                <option value="Year 2">Year 2</option>
+                                <option value="Year 3">Year 3</option>
+                                <option value="Year 4">Year 4</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label for="auth-email">Institutional Email</label>
+                            <input type="email" id="auth-email" placeholder="student@university.edu" required>
+                        </div>
+                    </div>
+                `;
+                
+                // Append confirm password field cleanly below standard baseline inputs
+                const confirmPassWrapper = document.createElement('div');
+                confirmPassWrapper.id = 'confirm-password-wrapper';
+                confirmPassWrapper.className = 'input-group';
+                confirmPassWrapper.innerHTML = `
+                    <label for="auth-confirm-password">Confirm Password</label>
+                    <input type="password" id="auth-confirm-password" placeholder="••••••••" required>
+                `;
+                baseAuthFields.appendChild(confirmPassWrapper);
+
+            } else {
+                authBox.style.maxWidth = "400px";
+                submitBtn.innerText = "Sign In";
+                subtitle.innerText = "Log in to manage your student syllabus records";
+                toggleMsg.innerHTML = `New student portal allocation? <span onclick="toggleAuthMode()">Create an account</span>`;
+                
+                // Clean up registration-only hooks
+                dynamicHook.innerHTML = '';
+                baseAuthFields.classList.remove('split-mode');
+                const confirmField = document.getElementById('confirm-password-wrapper');
+                if(confirmField) confirmField.remove();
+            }
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const regNumber = document.getElementById('auth-reg-num').value.trim();
+            const password = document.getElementById('auth-password').value;
+
+            try {
+                if (isSignUpMode) {
+                    const name = document.getElementById('auth-name').value.trim();
+                    const department = document.getElementById('auth-dept').value.trim();
+                    const yearOfStudy = document.getElementById('auth-year').value;
+                    const email = document.getElementById('auth-email').value.trim();
+                    const confirmPassword = document.getElementById('auth-confirm-password').value;
+
+                    if (password !== confirmPassword) {
+                        throw new Error("Passwords do not match. Please re-enter.");
+                    }
+
+                    // 1. Write the new student data record into your Supabase database table
+                    const { data, error } = await _supabase
+                        .from('students')
+                        .insert([
+                            { 
+                                registration_number: regNumber, 
+                                name: name, 
+                                department: department, 
+                                year_of_study: yearOfStudy, 
+                                email: email, 
+                                password: password // Note: For real builds, use encryption hash routines
+                            }
+                        ]);
+                    
+                    if (error) throw error;
+
+                    // 2. Trigger toast overlay update and drop back directly into log-in layout mode
+                    showToast("Registration successful! Redirecting to login...");
+                    setTimeout(() => {
+                        toggleAuthMode();
+                        document.getElementById('auth-reg-num').value = regNumber;
+                    }, 2000);
+
+                } else {
+                    // Sign-In Check Mode: Query student parameters from the database
+                    const { data, error } = await _supabase
+                        .from('students')
+                        .select('*')
+                        .eq('registration_number', regNumber)
+                        .single();
+
+                    if (error || !data) {
+                        throw new Error("Invalid Registration Number or account does not exist.");
+                    }
+
+                    if (data.password !== password) {
+                        throw new Error("Incorrect Password credential parameter.");
+                    }
+
+                    // Store active context variables locally for use inside dashboard panels
+                    localStorage.setItem('student_name', data.name);
+                    localStorage.setItem('student_reg', data.registration_number);
+                    localStorage.setItem('student_year', data.year_of_study);
+
+                    window.location.href = 'dashboard.html';
+                }
+            } catch (err) {
+                alert(`Authentication Fault Exception: ${err.message}`);
+            }
+        });
+    </script>
+</body>
+</html>
