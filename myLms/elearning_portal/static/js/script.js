@@ -15,7 +15,6 @@ let allCoursesCache = [];
 // ==========================================
 // ====== CORE VIEW ROUTER & LIFECYCLE ======
 // ==========================================
-
 async function loadPage(page) {
     try {
         const response = await fetch(page);
@@ -42,12 +41,119 @@ async function loadPage(page) {
                 console.log("⚡ Router Active: Initializing Dashboard...");
                 initializeDashboard();
             }
+            /* ========================================================
+               NEW ROUTE: LECTURER PORTAL
+               ======================================================== */
+            else if (page === 'lecturer_panel.html') {
+                console.log("⚡ Router Active: Initializing Lecturer Panel...");
+
+                // Manually find and execute the dynamic dropdown script inside lecturer_panel.html
+                const scriptTags = mainContent.querySelectorAll("script");
+                scriptTags.forEach(oldScript => {
+                    const newScript = document.createElement("script");
+                    newScript.text = oldScript.text;
+                    document.body.appendChild(newScript).parentNode.removeChild(newScript);
+                });
+
+                // Re-bind the Form Submit event listener to this fresh DOM structure
+                initializeLecturerFormListener();
+                populateLecturerCoursesDropdown();
+            }
         } else {
             console.error("❌ Error: Target element '#main-content' was not found in the DOM.");
         }
     } catch (error) {
         console.error("Error loading the page:", error);
     }
+}
+
+/**
+ * Clean helper function to bind the form submit event listener safely 
+ * whenever the lecturer view is mounted into the viewport.
+ */
+function initializeLecturerFormListener() {
+    const uploadForm = document.getElementById('lecturer-upload-form');
+    if (!uploadForm) return;
+
+    // Remove any old duplicate listeners before adding a fresh one
+    uploadForm.replaceWith(uploadForm.cloneNode(true));
+    const cleanForm = document.getElementById('lecturer-upload-form');
+
+    cleanForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const submitBtn = document.getElementById('publish-content-btn');
+        submitBtn.innerText = "⏳ Uploading & Publishing Materials...";
+        submitBtn.disabled = true;
+
+        const courseCode = document.getElementById('lecturer-course-select').value;
+        const moduleTitle = document.getElementById('lecturer-module-title').value.trim();
+        const lessonTitle = document.getElementById('lecturer-lesson-title').value.trim();
+        const fileTarget = document.getElementById('lecturer-file-input').files[0];
+
+        try {
+            if (!fileTarget) throw new Error("Please specify a document resource artifact to publish.");
+
+            // 1. Upload File to Supabase Storage Bucket
+            const sanitizedFileName = `${Date.now()}_${fileTarget.name.replace(/\s+/g, '_')}`;
+            const filePath = `${courseCode}/${sanitizedFileName}`;
+
+            console.log("📡 Staging file storage handshake for:", filePath);
+            const { data: uploadData, error: uploadErr } = await _supabase.storage
+                .from('course-resources')
+                .upload(filePath, fileTarget);
+
+            if (uploadErr) throw uploadErr;
+
+            // 2. Fetch public link URL of the newly created object
+            const { data: urlData } = _supabase.storage
+                .from('course-resources')
+                .getPublicUrl(filePath);
+
+            const publicResourceUrl = urlData.publicUrl;
+            console.log("🔗 Shared public download asset registered:", publicResourceUrl);
+
+            // 3. Upsert or create the Module tracking node
+            let { data: targetModule, error: modErr } = await _supabase
+                .from('course_modules')
+                .select('id')
+                .ilike('course_code', courseCode)
+                .eq('title', moduleTitle)
+                .maybeSingle();
+
+            if (!targetModule) {
+                const { data: newMod, error: insertModErr } = await _supabase
+                    .from('course_modules')
+                    .insert([{ course_code: courseCode.toLowerCase(), title: moduleTitle }])
+                    .select('id')
+                    .single();
+
+                if (insertModErr) throw insertModErr;
+                targetModule = newMod;
+            }
+
+            // 4. Mount lesson item tracking down to module node reference
+            const { error: lessonErr } = await _supabase
+                .from('course_lessons')
+                .insert([{
+                    module_id: targetModule.id,
+                    title: lessonTitle,
+                    resource_url: publicResourceUrl
+                }]);
+
+            if (lessonErr) throw lessonErr;
+
+            alert(`✅ Published successfully! ${lessonTitle} is now instantly accessible to all enrolled students.`);
+            cleanForm.reset();
+
+        } catch (err) {
+            console.error("⚡ Publication workflow structural block:", err);
+            alert(`Failed to save material details: ${err.message}`);
+        } finally {
+            submitBtn.innerText = "🚀 Publish Material Live";
+            submitBtn.disabled = false;
+        }
+    });
 }
 function loadCourseWorkspace(courseId) {
     // Show a quick content frame loading feedback state
@@ -273,16 +379,21 @@ async function synchronizeMyEnrollments() {
               <span>${enrollment.lecturer_name || 'Department Faculty'}</span>
             </div>
         </div>
-        
-        <div class="course-actions" style="padding: 0 1.25rem 1.25rem 1.25rem; display: flex; gap: 0.75rem; width: 100%; box-sizing: border-box;">
-            <!-- Buttons created clean without string collision -->
-            <button class="action-enter-trigger" style="flex: 2; background: #10b981; border: none; color: white; padding: 0.75rem; border-radius: 0.5rem; cursor: pointer; font-weight: 700; transition: background 0.2s ease;">
-                🚪 Enter
-            </button>
-            <button class="action-drop-trigger" style="flex: 1.2; background: #f7ca44; border: none; color: #020e2e; padding: 0.75rem; border-radius: 0.5rem; cursor: pointer; font-weight: 700; transition: background 0.2s ease; white-space: nowrap; font-size: 0.85rem;">
-                Drop
-            </button>
-        </div>
+
+<div class="course-actions" style="padding: 0 1.25rem 1.25rem 1.25rem; display: flex; flex-direction: column; gap: 0.75rem; width: 100%; box-sizing: border-box; align-items: center;">
+    
+    <!-- PRIMARY ACTION: Fixed to Emerald Green by default -->
+    <button class="action-enter-trigger" style="width: 100% !important; background: #10b981 !important; border: none !important; color: white !important; padding: 0.8rem 1rem; border-radius: 0.6rem; cursor: pointer; font-weight: 700; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 0.4rem; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">
+        <span>🚪</span> Enter Classroom
+    </button>
+    
+    <!-- DESTRUCTIVE ACTION: Fixed to Ruby Red by default -->
+    <button class="action-drop-trigger" style="width: 60% !important; background: #dc2626 !important; border: none !important; color: #ffffff !important; padding: 0.55rem 1rem; border-radius: 0.5rem; cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: all 0.2s ease; margin-top: 0.25rem; box-shadow: 0 4px 10px rgba(220, 38, 38, 0.15);">
+        Drop Course
+    </button>
+    
+</div>
+</div>
     `;
 
             // 3. Programmatically hook up event listeners using actual JS references
@@ -308,60 +419,135 @@ async function synchronizeMyEnrollments() {
             </div>`;
     }
 }
-function enterCourseWorkspace(courseCode) {
+async function enterCourseWorkspace(courseCode) {
     console.log("🚀 enterCourseWorkspace reached with code:", courseCode);
 
-    // 1. Force the string to be clean for URL routing
     const targetCode = String(courseCode).trim();
-
-    // 2. Locate the DOM container injection target
     const mainWorkspaceContainer = document.getElementById('main-content');
 
     if (!mainWorkspaceContainer) {
-        console.error("❌ CRITICAL: Could not find an element with id='main-content' on the page!");
+        console.error("❌ CRITICAL: Could not find element with id='main-content'");
         return;
     }
 
-    console.log("🎯 Found '#main-content'. Injecting loading animation...");
+    // 1. Fetch the course title using Supabase BEFORE loading the view
+    let displayTitle = `${targetCode.toUpperCase()} Workspace`; // fallback default
+    try {
+        const { data: enrollmentData, error: courseErr } = await _supabase
+            .from('enrollments')
+            .select('course_title')
+            .ilike('course_code', targetCode)
+            .limit(1)
+            .maybeSingle();
 
-    // 3. Immediately inject a loader state so you know it responded
-    mainWorkspaceContainer.innerHTML = `
-        <div class="catalog-loader" style="color: #94a3b8; padding: 4rem; text-align: center; background: rgba(2, 14, 46, 0.4); border-radius: 1rem;">
-            <div style="font-size: 2.5rem; margin-bottom: 1rem; animation: spin 2s linear infinite;">🔄</div>
-            <h3 style="color: white; margin: 0 0 0.5rem 0;">Opening Classroom Workspace</h3>
-            <p style="margin: 0; color: #64748b;">Synchronizing curriculum parameters for ${targetCode}...</p>
-        </div>`;
+        if (!courseErr && enrollmentData && enrollmentData.course_title) {
+            displayTitle = enrollmentData.course_title;
+            console.log("✨ Found title successfully:", displayTitle);
+        }
+    } catch (e) {
+        console.warn("Could not pre-fetch course title:", e);
+    }
 
-    // 4. Construct the fetch URL cleanly, wrapping the space-filled string safely
+    // 2. Load the HTML template fragment from Django
     const requestUrl = `/course-content.html?code=${encodeURIComponent(targetCode)}`;
-    console.log(`📡 Dispatching fetch network request to: ${requestUrl}`);
 
-    fetch(requestUrl)
-        .then(response => {
-            console.log(`📥 Network response received. Status: ${response.status} (${response.statusText})`);
-            if (!response.ok) throw new Error(`Server returned error code ${response.status}`);
-            return response.text();
-        })
-        .then(htmlSnippet => {
-            console.log("✨ HTML snippet received from Django successfully. Injecting into layout view...");
+    try {
+        const response = await fetch(requestUrl);
+        if (!response.ok) throw new Error(`Server returned error code ${response.status}`);
 
-            // Inject the dynamic dashboard content straight into view
-            mainWorkspaceContainer.innerHTML = htmlSnippet;
+        const htmlSnippet = await response.text();
 
-            console.log("✅ Workspace view successfully populated!");
-        })
-        .catch(err => {
-            console.error("❌ Classroom entry breakdown:", err);
-            mainWorkspaceContainer.innerHTML = `
-                <div class="empty-state-container" style="text-align: center; padding: 4rem 2rem; margin: 2rem auto; max-width:550px; background: rgba(2, 14, 46, 0.6); border: 2px dashed #ff6b6b; border-radius: 1rem;">
-                    <div class="empty-state-icon" style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
-                    <h2 class="empty-state-title" style="color: white; margin: 0 0 0.5rem 0;">Workspace Load Failure</h2>
-                    <p class="empty-state-message" style="color: #ff6b6b; margin: 0;">${err.message}</p>
-                </div>`;
-        });
+        // Inject the HTML template
+        mainWorkspaceContainer.innerHTML = htmlSnippet;
+
+        // 3. Update the fields now that they are rendered in the DOM
+        const titleDisplay = document.getElementById('workspace-title-display');
+        const codeDisplay = document.getElementById('workspace-code-display');
+        const descDisplay = document.getElementById('workspace-desc-display');
+
+        if (titleDisplay) titleDisplay.innerText = displayTitle;
+        if (codeDisplay) codeDisplay.innerText = targetCode.toUpperCase();
+        if (descDisplay) descDisplay.innerText = 'Welcome to your digital interactive learning area.';
+
+        // 4. Load your modules/lessons directly from here
+        await loadWorkspaceModules(targetCode);
+
+    } catch (err) {
+        console.error("❌ Classroom entry breakdown:", err);
+    }
 }
 
-// ✅ FIXED: Completely remmapped variables to use dynamic registration number strings
+// Separate clean helper function to load modules
+async function loadWorkspaceModules(targetCode) {
+    const modulesMount = document.getElementById('workspace-modules-mount');
+    if (!modulesMount) return;
+
+    try {
+        const { data: modules, error: modErr } = await _supabase
+            .from('course_modules')
+            .select('id, title, lessons:course_lessons(id, title, resource_url)')
+            .ilike('course_code', targetCode)
+            .order('id', { ascending: true });
+
+        if (modErr) throw modErr;
+
+        if (!modules || modules.length === 0) {
+            modulesMount.innerHTML = `
+                <div class="empty-workspace-state" style="text-align: center; padding: 4rem 2rem; background: rgba(2, 14, 46, 0.5); border: 2px dashed rgba(255, 255, 255, 0.1); border-radius: 1rem; color: #94a3b8;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">📂</div>
+                    <h3 style="color: white; margin: 0 0 0.5rem 0;">No Content Discovered</h3>
+                    <p style="margin: 0;">Your lecturer hasn't compiled learning modules yet.</p>
+                </div>`;
+            return;
+        }
+
+        modulesMount.innerHTML = '';
+        modules.forEach(module => {
+            let lessonsMarkup = '';
+
+            if (module.lessons && module.lessons.length > 0) {
+                module.lessons.forEach(lesson => {
+                    // Check if there is an optional uploaded resource file link
+                    let downloadButtonHTML = '';
+                    if (lesson.resource_url && lesson.resource_url.trim() !== '' && lesson.resource_url !== '#') {
+                        downloadButtonHTML = `
+                            <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.05);">
+                                <a href="${lesson.resource_url}" target="_blank" style="display: inline-flex; align-items: center; gap: 0.5rem; color: #10b981; text-decoration: none; font-weight: 600; font-size: 0.85rem; background: rgba(16, 185, 129, 0.1); padding: 0.4rem 0.8rem; border-radius: 0.25rem; transition: background 0.2s;">
+                                    📥 Download Reference Resource File
+                                </a>
+                            </div>
+                        `;
+                    }
+
+                    // Render notes container with pre-wrap layout formatting rules
+                    lessonsMarkup += `
+                        <li style="background: rgba(2, 14, 46, 0.3); padding: 1.25rem; border-radius: 0.5rem; border: 1px solid rgba(255,255,255,0.03); display: flex; flex-direction: column; gap: 0.5rem;">
+                            <div style="color: #94a3b8; font-size: 0.95rem; line-height: 1.6; white-space: pre-wrap; word-break: break-word;">
+                                📄 ${lesson.title}
+                            </div>
+                            ${downloadButtonHTML}
+                        </li>`;
+                });
+            } else {
+                lessonsMarkup = `<li style="color: #64748b; padding: 0.5rem; font-style: italic;">No reading items uploaded inside this module.</li>`;
+            }
+
+            const moduleCard = `
+                <div class="module-card" style="background: #23304c; border-radius: 1rem; padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid rgba(255, 255, 255, 0.05);">
+                    <h3 style="margin: 0 0 1rem 0; font-size: 1.3rem; color: #ffffff;">📦 ${module.title}</h3>
+                    <ul class="lessons-list" style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 1rem;">
+                        ${lessonsMarkup}
+                    </ul>
+                </div>`;
+
+            modulesMount.insertAdjacentHTML('beforeend', moduleCard);
+        });
+    } catch (err) {
+        console.error("Error loading workspace modules:", err);
+    }
+}
+
+
 async function executeStudentEnrollment(courseCode, courseTitle, lecturerName) {
     if (!courseCode) {
         showPopupNotification("Invalid course selection string parameters.", 'error');
@@ -682,3 +868,259 @@ function handleSignOut() {
     // 💡 FIXED: Redirect to Django's root URL '/' where your login view lives
     window.location.href = '/';
 }
+// Hook this up inside your script management file when initializing the lecturer tab framework
+document.getElementById('lecturer-upload-form')?.addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const submitBtn = document.getElementById('publish-content-btn');
+    submitBtn.innerText = "⏳ Uploading & Publishing Materials...";
+    submitBtn.disabled = true;
+
+    const courseCode = document.getElementById('lecturer-course-select').value;
+    const moduleTitle = document.getElementById('lecturer-module-title').value.trim();
+    const lessonTitle = document.getElementById('lecturer-lesson-title').value.trim();
+    const fileTarget = document.getElementById('lecturer-file-input').files[0];
+
+    try {
+        if (!fileTarget) throw new Error("Please specify a document resource artifact to publish.");
+
+        // 1. Upload File to Supabase Storage Bucket
+        const sanitizedFileName = `${Date.now()}_${fileTarget.name.replace(/\s+/g, '_')}`;
+        const filePath = `${courseCode}/${sanitizedFileName}`;
+
+        console.log("📡 Staging file storage handshake for:", filePath);
+        const { data: uploadData, error: uploadErr } = await _supabase.storage
+            .from('course-resources')
+            .upload(filePath, fileTarget);
+
+        if (uploadErr) throw uploadErr;
+
+        // 2. Fetch public link URL of the newly created object
+        const { data: urlData } = _supabase.storage
+            .from('course-resources')
+            .getPublicUrl(filePath);
+
+        const publicResourceUrl = urlData.publicUrl;
+        console.log("🔗 Shared public download asset registered:", publicResourceUrl);
+
+        // 3. Upsert or create the Module tracking node
+        let { data: targetModule, error: modErr } = await _supabase
+            .from('course_modules')
+            .select('id')
+            .ilike('course_code', courseCode)
+            .eq('title', moduleTitle)
+            .maybeSingle();
+
+        if (!targetModule) {
+            const { data: newMod, error: insertModErr } = await _supabase
+                .from('course_modules')
+                .insert([{ course_code: courseCode.toLowerCase(), title: moduleTitle }])
+                .select('id')
+                .single();
+
+            if (insertModErr) throw insertModErr;
+            targetModule = newMod;
+        }
+
+        // 4. Mount lesson item tracking down to module node reference
+        const { error: lessonErr } = await _supabase
+            .from('course_lessons')
+            .insert([{
+                module_id: targetModule.id,
+                title: lessonTitle,
+                resource_url: publicResourceUrl
+            }]);
+
+        if (lessonErr) throw lessonErr;
+
+        alert(`✅ Published successfully! ${lessonTitle} is now instantly accessible to all enrolled students.`);
+        document.getElementById('lecturer-upload-form').reset();
+
+    } catch (err) {
+        console.error("⚡ Publication workflow structural block:", err);
+        alert(`Failed to save material details: ${err.message}`);
+    } finally {
+        submitBtn.innerText = "🚀 Publish Material Live";
+        submitBtn.disabled = false;
+    }
+});
+document.addEventListener("DOMContentLoaded", () => {
+    const lecturerNavLink = document.getElementById("nav-lecturer-portal");
+
+    if (lecturerNavLink) {
+        lecturerNavLink.addEventListener("click", async (e) => {
+            e.preventDefault();
+            console.log("🛠️ Loading Lecturer Content Management view...");
+
+            // 1. Highlight the current active tab in the sidebar
+            document.querySelectorAll(".sidebar-link").forEach(link => {
+                link.style.background = "transparent";
+                link.style.color = "#94a3b8";
+            });
+            lecturerNavLink.style.background = "rgba(255, 255, 255, 0.05)";
+            lecturerNavLink.style.color = "#ffffff";
+
+            // 2. Fetch the template fragment straight from Django
+            const mainWorkspaceContainer = document.getElementById('main-content');
+            if (!mainWorkspaceContainer) {
+                console.error("❌ Target viewport container '#main-content' missing.");
+                return;
+            }
+
+            try {
+                // Ensure your Django urls.py routes this layout template path smoothly
+                const response = await fetch("/lecturer-panel.html");
+                if (!response.ok) throw new Error(`Server dropped connection with code ${response.status}`);
+
+                const htmlSnippet = await response.text();
+
+                // 3. Inject the form markup into the dashboard frame workspace
+                mainWorkspaceContainer.innerHTML = htmlSnippet;
+                console.log("✅ Lecturer Portal loaded successfully into DOM workspace.");
+
+            } catch (err) {
+                console.error("❌ Failed to swap layout to lecturer view:", err);
+                mainWorkspaceContainer.innerHTML = `
+                    <div style="text-align: center; padding: 4rem 2rem; color: #ff6b6b;">
+                        <h3>⚠️ Routing Breakdown</h3>
+                        <p>${err.message}</p>
+                    </div>`;
+            }
+        });
+    }
+});
+async function populateLecturerCoursesDropdown() {
+    const selectDropdown = document.getElementById('lecturer-course-select');
+    if (!selectDropdown) {
+        console.error("❌ Dropdown element '#lecturer-course-select' not found in DOM.");
+        return;
+    }
+
+    try {
+        console.log("📡 Fetching global courses from master catalog...");
+
+        // Pull explicitly from your master courses table
+        const { data: courses, error } = await _supabase
+            .from('courses')
+            .select('course_code, course_name');
+
+        if (error) {
+            console.error("🚨 Supabase Database Error Details:", error);
+            throw error;
+        }
+
+        const uniqueCourses = [];
+        const seenCodes = new Set();
+
+        if (courses && courses.length > 0) {
+            courses.forEach(item => {
+                if (item.course_code) {
+                    const codeUpper = item.course_code.trim().toUpperCase();
+                    if (!seenCodes.has(codeUpper)) {
+                        seenCodes.add(codeUpper);
+                        uniqueCourses.push({
+                            code: codeUpper,
+                            title: item.course_name ? item.course_name.trim() : "Unnamed Course"
+                        });
+                    }
+                }
+            });
+        }
+
+        if (uniqueCourses.length === 0) {
+            selectDropdown.innerHTML = '<option value="" disabled selected>⚠️ No courses found in global catalog</option>';
+            return;
+        }
+
+        // Build dynamic HTML layout options block
+        let optionsHTML = '<option value="" disabled selected>-- Choose an Enrolled Syllabus --</option>';
+        uniqueCourses.forEach(course => {
+            optionsHTML += `<option value="${course.code}">${course.code} - ${course.title}</option>`;
+        });
+
+        selectDropdown.innerHTML = optionsHTML;
+        console.log("✅ Lecturer course selection dropdown populated successfully!");
+
+    } catch (err) {
+        console.error("❌ Catch Block Caught Exception:", err);
+        selectDropdown.innerHTML = '<option value="" disabled selected>❌ Error loading database courses</option>';
+    }
+}
+// 1. Locate your form submission event listener block
+const lecturerForm = document.getElementById('lecturer-upload-form');
+
+if (lecturerForm) {
+    // 2. Make SURE 'async' is right here before '(e)' 👇
+    lecturerForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        try {
+            // Get your form values
+            const courseCode = document.getElementById('lecturer-course-select').value;
+            const moduleTitle = document.getElementById('lecturer-module-title').value;
+            const lessonTitle = document.getElementById('lecturer-lesson-title').value; // This is your textarea notes
+
+            // ==================== YOUR FILE UPLOAD CODE BLOCK ====================
+            let publicResourceUrl = '';
+            const fileInput = document.getElementById('lecturer-file-input');
+
+            if (fileInput && fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                const fileExt = file.name.split('.').pop();
+                const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+                const filePath = `resources/${fileName}`;
+
+                console.log("📤 Uploading optional resource file...");
+                const { data: uploadData, error: uploadError } = await _supabase.storage
+                    .from('lesson-materials')
+                    .upload(filePath, file);
+
+                if (uploadError) throw uploadError;
+
+                const { data: urlData } = _supabase.storage
+                    .from('lesson-materials')
+                    .getPublicUrl(filePath);
+
+                publicResourceUrl = urlData.publicUrl;
+            } else {
+                console.log("📝 No file chosen. Skipping storage upload, publishing text content only.");
+                // It stays as an empty string '', which is completely fine for the database!
+            }
+            // =====================================================================
+
+            console.log("Saving to database...", { courseCode, moduleTitle, lessonTitle, publicResourceUrl });
+
+            // 3. Your existing Supabase database insertion code goes here...
+            // Make sure you are passing 'publicResourceUrl' into your 'resource_url' column field!
+
+            alert("✨ Content published successfully!");
+            lecturerForm.reset(); // Clears the form inputs cleanly
+
+        } catch (error) {
+            console.error("❌ Form processing failed:", error);
+            alert("Something went wrong. Check console.");
+        }
+    });
+}
+function initializeNavigationAccess() {
+    // 1. Fetch the user's role saved during the sign-in redirect
+    const userRole = localStorage.getItem('student_year');
+
+    // 2. Locate the Lecturer Portal navigation choice item in the DOM sidebar
+    // Tip: Add an ID or clear identifier if needed, or query by containing text
+    const lecturerNavButton = document.querySelector('.nav-item[onclick*="lecturer_panel.html"]');
+
+    if (lecturerNavButton) {
+        // 3. Evaluate matching patterns. If it's NOT exactly "Lecturer", hide it!
+        if (userRole === 'Lecturer') {
+            lecturerNavButton.style.display = 'flex'; // Show link to verified lecturers
+            console.log("🔓 Lecturer administrative menu options activated.");
+        } else {
+            lecturerNavButton.style.display = 'none'; // Completely hidden from Year 1, 2, 3, 4 students
+            console.log("🔒 Student session active. Lecturer panel protected.");
+        }
+    }
+}
+
+// Invoke this function when the window finishes setting up
+window.addEventListener('DOMContentLoaded', initializeNavigationAccess);

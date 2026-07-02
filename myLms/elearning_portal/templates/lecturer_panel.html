@@ -1,0 +1,112 @@
+<div class="lecturer-portal-container" style="padding: 2.5rem; background: #23304c; border-radius: 1rem; box-shadow: 0 10px 25px rgba(0,0,0,0.2); max-width: 1200px; margin: 2rem auto;">
+    
+    <!-- Header Section -->
+    <div style="border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 1.5rem; margin-bottom: 2rem;">
+        <h2 style="color: #ffffff; margin: 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.6rem;">👨‍🏫 Lecturer Content Management</h2>
+        <p style="color: #94a3b8; font-size: 0.95rem; margin: 0.5rem 0 0 0;">Create academic modules, write detailed lesson contents, attach file resources, and publish live updates instantly.</p>
+    </div>
+
+    <!-- Horizontal Two-Column Form -->
+    <form id="lecturer-upload-form" style="display: flex; flex-direction: row; gap: 2.5rem; flex-wrap: wrap;">
+        
+        <!-- ================= LEFT COLUMN: COURSE CONFIGURATION & FILE ================= -->
+        <div style="flex: 1; min-width: 320px; display: flex; flex-direction: column; gap: 1.5rem;">
+            
+            <!-- Course Selector -->
+            <div class="form-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <label style="color: #f7ca44; font-weight: 600; font-size: 0.9rem; letter-spacing: 0.05em;">🎯 SELECT COURSE CODE</label>
+                <select id="lecturer-course-select" required style="background: rgba(2, 14, 46, 0.5); border: 1px solid rgba(255,255,255,0.1); padding: 0.85rem; border-radius: 0.5rem; color: white; font-weight: 600; width: 100%; outline: none;">
+                    <option value="" disabled selected>⏳ Loading available courses...</option>
+                </select>
+            </div>
+
+            <!-- Module Title -->
+            <div class="form-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <label style="color: #f7ca44; font-weight: 600; font-size: 0.9rem; letter-spacing: 0.05em;">📦 MODULE TITLE</label>
+                <input type="text" id="lecturer-module-title" placeholder="e.g., Module 2: Memory Allocation" required style="background: rgba(2, 14, 46, 0.5); border: 1px solid rgba(255,255,255,0.1); padding: 0.85rem; border-radius: 0.5rem; color: white; outline: none;">
+            </div>
+
+            <!-- File Upload -->
+            <div class="form-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
+                <label style="color: #f7ca44; font-weight: 600; font-size: 0.9rem; letter-spacing: 0.05em;">📎 UPLOAD RESOURCE (PDF, DOCX, ZIP)</label>
+                <div style="background: rgba(2, 14, 46, 0.3); padding: 1.25rem; border-radius: 0.5rem; border: 1px dashed rgba(255,255,255,0.2);">
+                    <input type="file" id="lecturer-file-input" style="color: #94a3b8; width: 100%; cursor: pointer;">
+                </div>
+            </div>
+            
+        </div>
+
+        <!-- ================= LECTURE NOTES AS THE LESSON TITLE FIELD ================= -->
+        <div style="flex: 1.4; min-width: 400px; display: flex; flex-direction: column; gap: 1.5rem;">
+            
+            <!-- Lesson Notes Canvas (Replaced input text with textarea but kept the same ID) -->
+            <div class="form-group" style="display: flex; flex-direction: column; gap: 0.5rem; flex-grow: 1;">
+                <label style="color: #f7ca44; font-weight: 600; font-size: 0.9rem; letter-spacing: 0.05em;">✍️ LESSON / TOPIC MATERIAL & NOTES</label>
+                <textarea id="lecturer-lesson-title" placeholder="Type or paste complete lesson notes, explanations, assignment briefs, or references here..." required style="background: rgba(2, 14, 46, 0.5); border: 1px solid rgba(255,255,255,0.1); padding: 1rem; border-radius: 0.5rem; color: white; min-height: 280px; flex-grow: 1; resize: vertical; outline: none; font-family: inherit; line-height: 1.6;"></textarea>
+            </div>
+
+        </div>
+
+        <!-- Action Footer Row -->
+        <div style="width: 100%; display: flex; justify-content: flex-end; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1.5rem; margin-top: 1rem;">
+            <button type="submit" id="publish-content-btn" style="background: #10b981 !important; color: white !important; padding: 0.9rem 2.5rem; border: none; border-radius: 0.5rem; font-weight: 700; font-size: 1rem; cursor: pointer; transition: background-color 0.2s; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);">
+                🚀 Publish Material Live
+            </button>
+        </div>
+
+    </form>
+</div>
+
+<!-- Updated Database Population Script -->
+<script>
+async function populateLecturerCoursesDropdown() {
+    const selectDropdown = document.getElementById('lecturer-course-select');
+    if (!selectDropdown) return;
+
+    try {
+        console.log("📡 Fetching unique master courses for lecturer portal...");
+        
+        const { data: courses, error } = await _supabase
+            .from('courses')
+            .select('course_code, course_name');
+
+        if (error) throw error;
+
+        const uniqueCourses = [];
+        const seenCodes = new Set();
+        
+        if (courses) {
+            courses.forEach(item => {
+                if (item.course_code) {
+                    const codeUpper = item.course_code.trim().toUpperCase();
+                    if (!seenCodes.has(codeUpper)) {
+                        seenCodes.add(codeUpper);
+                        uniqueCourses.push(item);
+                    }
+                }
+            });
+        }
+
+        if (uniqueCourses.length === 0) {
+            selectDropdown.innerHTML = '<option value="" disabled selected>⚠️ No active courses found in catalog</option>';
+            return;
+        }
+
+        let optionsHTML = '<option value="" disabled selected>-- Choose an Enrolled Syllabus --</option>';
+        uniqueCourses.forEach(course => {
+            const code = course.course_code.trim().toUpperCase();
+            const title = course.course_name ? course.course_name.trim() : "Unnamed Course";
+            optionsHTML += `<option value="${code}">${code} - ${title}</option>`;
+        });
+
+        selectDropdown.innerHTML = optionsHTML;
+        console.log("✅ Lecturer dropdown populated using master courses catalog.");
+
+    } catch (err) {
+        console.error("❌ Failed to populate course selection dropdown:", err);
+        selectDropdown.innerHTML = '<option value="" disabled selected>❌ Error loading database courses</option>';
+    }
+}
+
+populateLecturerCoursesDropdown();
+</script>

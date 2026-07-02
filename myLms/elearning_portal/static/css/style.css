@@ -75,24 +75,35 @@ body {
     min-width: 0;
 }
 
-/* Left Navigation Sidebar (Snaps perfectly to bottom edge of Top Header) */
 #sidebar {
     width: var(--sidebar-width);
     background: var(--primary) !important;
     border-right: 1px solid var(--primary-hover);
-    display: flex;
-    flex-direction: column;
-    padding: 2rem 1rem;
     position: fixed;
+
+    /* 💡 Stretches the sidebar perfectly between the header and the screen bottom */
     top: var(--header-height);
-    /* Begins exactly at the bottom of the top header */
     bottom: 0;
     left: 0;
     z-index: 150;
     box-sizing: border-box;
-    height: 100%;
+
+    /* ❌ REMOVE any 'height' or 'min-height' lines here completely */
+
+    /* Safe padding at the bottom so elements don't bunch up */
+    padding: 2rem 1rem 6rem 1rem;
 }
 
+.sidebar-footer {
+    position: absolute;
+    /* 💡 Lift it up slightly from the absolute bottom edge of the viewport */
+    bottom: 1rem;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    box-sizing: border-box;
+    padding: 0 1rem;
+}
 
 /* Push the sign-out button to the absolute bottom of the flex column */
 .nav-item.sign-out-btn {
@@ -343,6 +354,24 @@ body {
     cursor: pointer;
     font-weight: 700 !important;
     transition: all 0.2s ease;
+}
+
+/* Deep green on hover */
+.action-enter-trigger:hover {
+    background: #059669 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35) !important;
+}
+
+/* Deep red on hover */
+.action-drop-trigger:hover {
+    background: #b91c1c !important;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(220, 38, 38, 0.3) !important;
+}
+
+.sidebar-footer {
+    background-color: rgba(182, 184, 187, 0.877);
 }
 
 @media (max-width: 1024px) {

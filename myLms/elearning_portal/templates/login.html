@@ -8,29 +8,63 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
     <style>
         body {
-            margin: 0; padding: 0;
-            background: #01081b;
-            color: #fff;
+            margin: 0; 
+            padding: 0;
             font-family: 'Inter', sans-serif;
             display: flex;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
+            
+            /* Background image with overlay matching image_97e858.jpg styling */
+            background: linear-gradient(rgba(1, 8, 27, 0.75), rgba(1, 8, 27, 0.92)), 
+                        url('https://images.unsplash.com/photo-1541339907198-e08756dedf3f?q=80&w=1920');
+                        
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            
+            color: #fff;
         }
 
+        /* Modern Horizontal Split Container */
         .auth-card-wrapper {
             width: 100%;
-            max-width: 550px; /* Widened slightly to elegantly support the multi-column layout */
-            background: rgba(2, 14, 46, 0.85);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 1rem;
-            padding: 2.5rem;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            max-width: 780px; /* Initial optimized width for the sign-in layout */
+            background: rgba(2, 14, 46, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 1.25rem;
+            box-shadow: 0 25px 55px rgba(0, 0, 0, 0.65);
             box-sizing: border-box;
-            transition: max-width 0.3s ease;
+            transition: max-width 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            
+            display: flex; 
+            overflow: hidden; /* Keeps panel backgrounds clipped inside rounded borders */
         }
 
-        /* Responsive grid utility for registration inputs */
+        /* 🏛️ Left-side Welcome Brand Panel */
+        .auth-side-banner {
+            flex: 1;
+            background: linear-gradient(145deg, rgba(245, 195, 64, 0.12), rgba(1, 8, 27, 0.85));
+            padding: 3rem 2.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        /* 📝 Right-side Interactive Form Section */
+        .auth-form-container {
+            flex: 1.3;
+            padding: 3rem 2.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
         .form-grid-layout {
             display: grid;
             grid-template-columns: 1fr;
@@ -59,8 +93,8 @@
 
         .input-group input, .input-group select {
             padding: 0.85rem 1rem;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 0.5rem;
             color: #fff;
             font-size: 0.95rem;
@@ -76,6 +110,11 @@
             background-repeat: no-repeat;
             background-position: right 12px center;
             background-size: 14px;
+        }
+
+        .input-group select option {
+            background: #020e2e;
+            color: #fff;
         }
 
         .input-group input:focus, .input-group select:focus { border-color: #f5c340; }
@@ -109,7 +148,6 @@
             font-weight: 600;
         }
 
-        /* Custom Dynamic Toast UI System */
         .toast-notification {
             position: fixed;
             bottom: 24px;
@@ -132,37 +170,69 @@
             transform: translateY(0);
             opacity: 1;
         }
+
+        /* Responsive view adaptation for narrow mobile interfaces */
+        @media (max-width: 768px) {
+            .auth-card-wrapper {
+                flex-direction: column;
+                max-width: 450px !important;
+            }
+            .auth-side-banner {
+                padding: 2rem;
+                text-align: center;
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            }
+            .auth-form-container {
+                padding: 2rem;
+            }
+        }
     </style>
 </head>
 <body>
 
     <div class="auth-card-wrapper" id="auth-box">
-        <div style="text-align: center; margin-bottom: 2rem;">
-            <h2 style="margin: 0; color: #f5c340;">🏛️ Kabrite Institute Gateway</h2>
-            <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 0.85rem;" id="auth-subtitle">Log in to manage your student syllabus records</p>
-        </div>
-
-        <form id="auth-core-form">
-            <div id="dynamic-fields-hook"></div>
-            
-            <div class="form-grid-layout" id="base-auth-fields">
-                <div class="input-group" id="login-identifier-wrapper">
-                    <label for="auth-reg-num">Registration Number</label>
-                    <input type="text" id="auth-reg-num" placeholder="e.g., COM/0042/24" required>
-                </div>
-                
-                <div class="input-group">
-                    <label for="auth-password">Security Password</label>
-                    <input type="password" id="auth-password" placeholder="••••••••" required>
-                </div>
+        
+        <!-- 🏛️ BRAND BANNER SIDE PANEL -->
+        <div class="auth-side-banner">
+            <h2 style="margin: 0; color: #f5c340; font-size: 1.75rem; letter-spacing: -0.01em; line-height: 1.3;">
+                🏛️ KABRITE UNIVERSITY Gateway
+            </h2>
+            <p style="margin: 12px 0 0 0; color: #94a3b8; font-size: 0.9rem; line-height: 1.5;" id="auth-subtitle">
+                Log in to manage your student syllabus records
+            </p>
+            <div style="margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 1.25rem;">
+                <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(245, 195, 64, 0.5); font-weight: 700;">
+                    Secure Core Access
+                </span>
             </div>
-
-            <button type="submit" class="btn-auth-trigger" id="btn-auth-submit">Sign In</button>
-        </form>
-
-        <div class="auth-toggle-hint">
-            <p id="auth-toggle-msg">New student portal allocation? <span onclick="toggleAuthMode()">Create an account</span></p>
         </div>
+
+        <!-- 📝 INPUT FORMS SIDE PANEL -->
+        <div class="auth-form-container">
+            <form id="auth-core-form">
+                <div id="dynamic-fields-hook"></div>
+                
+                <div class="form-grid-layout" id="base-auth-fields">
+                    <div class="input-group" id="login-identifier-wrapper">
+                        <label for="auth-reg-num">Registration Number / ID</label>
+                        <input type="text" id="auth-reg-num" placeholder="e.g., COM/0000/00" required>
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="auth-password">Security Password</label>
+                        <input type="password" id="auth-password" placeholder="••••••••" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-auth-trigger" id="btn-auth-submit">Sign In</button>
+            </form>
+
+            <div class="auth-toggle-hint">
+                <p id="auth-toggle-msg">New student portal allocation? <span onclick="toggleAuthMode()">Create an account</span></p>
+            </div>
+        </div>
+
     </div>
 
     <div id="toast-message" class="toast-notification">✅ Registration successful! Redirecting...</div>
@@ -193,18 +263,18 @@
         function toggleAuthMode() {
             isSignUpMode = !isSignUpMode;
             if (isSignUpMode) {
-                authBox.style.maxWidth = "550px";
+                // Expanded horizontal space to beautifully fit double columns
+                authBox.style.maxWidth = "960px";
                 submitBtn.innerText = "Register Account";
-                subtitle.innerText = "Create a student profile to start tracking courses";
+                subtitle.innerText = "Create a portal profile to start tracking courses";
                 toggleMsg.innerHTML = `Already registered? <span onclick="toggleAuthMode()">Sign In</span>`;
                 
-                // Inject structural metadata configuration items for full registrations
                 baseAuthFields.classList.add('split-mode');
                 dynamicHook.innerHTML = `
                     <div class="form-grid-layout split-mode">
                         <div class="input-group">
                             <label for="auth-name">Full Name</label>
-                            <input type="text" id="auth-name" placeholder="e.g., Haron Moenga" required>
+                            <input type="text" id="auth-name" placeholder="e.g., Enter here" required>
                         </div>
                         <div class="input-group">
                             <label for="auth-dept">Academic Department</label>
@@ -213,39 +283,41 @@
                     </div>
                     <div class="form-grid-layout split-mode">
                         <div class="input-group">
-                            <label for="auth-year">Year of Study</label>
+                            <label for="auth-year">Portal Role / Level</label>
                             <select id="auth-year" required>
                                 <option value="" disabled selected>Select level...</option>
                                 <option value="Year 1">Year 1</option>
                                 <option value="Year 2">Year 2</option>
                                 <option value="Year 3">Year 3</option>
                                 <option value="Year 4">Year 4</option>
+                                <option value="Lecturer">Lecturer / Instructor</option>
                             </select>
                         </div>
                         <div class="input-group">
                             <label for="auth-email">Institutional Email</label>
-                            <input type="email" id="auth-email" placeholder="student@university.edu" required>
+                            <input type="email" id="auth-email" placeholder="student@gmail.com" required>
                         </div>
                     </div>
                 `;
                 
-                // Append confirm password field cleanly below standard baseline inputs
-                const confirmPassWrapper = document.createElement('div');
-                confirmPassWrapper.id = 'confirm-password-wrapper';
-                confirmPassWrapper.className = 'input-group';
-                confirmPassWrapper.innerHTML = `
-                    <label for="auth-confirm-password">Confirm Password</label>
-                    <input type="password" id="auth-confirm-password" placeholder="••••••••" required>
-                `;
-                baseAuthFields.appendChild(confirmPassWrapper);
+                if(!document.getElementById('confirm-password-wrapper')) {
+                    const confirmPassWrapper = document.createElement('div');
+                    confirmPassWrapper.id = 'confirm-password-wrapper';
+                    confirmPassWrapper.className = 'input-group';
+                    confirmPassWrapper.innerHTML = `
+                        <label for="auth-confirm-password">Confirm Password</label>
+                        <input type="password" id="auth-confirm-password" placeholder="••••••••" required>
+                    `;
+                    baseAuthFields.appendChild(confirmPassWrapper);
+                }
 
             } else {
-                authBox.style.maxWidth = "400px";
+                // Sleek container size perfect for a centralized simple login form
+                authBox.style.maxWidth = "780px";
                 submitBtn.innerText = "Sign In";
                 subtitle.innerText = "Log in to manage your student syllabus records";
                 toggleMsg.innerHTML = `New student portal allocation? <span onclick="toggleAuthMode()">Create an account</span>`;
                 
-                // Clean up registration-only hooks
                 dynamicHook.innerHTML = '';
                 baseAuthFields.classList.remove('split-mode');
                 const confirmField = document.getElementById('confirm-password-wrapper');
@@ -271,7 +343,6 @@
                         throw new Error("Passwords do not match. Please re-enter.");
                     }
 
-                    // 1. Write the new student data record into your Supabase database table
                     const { data, error } = await _supabase
                         .from('students')
                         .insert([
@@ -281,13 +352,12 @@
                                 department: department, 
                                 year_of_study: yearOfStudy, 
                                 email: email, 
-                                password: password // Note: For real builds, use encryption hash routines
+                                password: password 
                             }
                         ]);
                     
                     if (error) throw error;
 
-                    // 2. Trigger toast overlay update and drop back directly into log-in layout mode
                     showToast("Registration successful! Redirecting to login...");
                     setTimeout(() => {
                         toggleAuthMode();
@@ -295,7 +365,6 @@
                     }, 2000);
 
                 } else {
-                    // Sign-In Check Mode: Query student parameters from the database
                     const { data, error } = await _supabase
                         .from('students')
                         .select('*')
@@ -310,7 +379,6 @@
                         throw new Error("Incorrect Password credential parameter.");
                     }
 
-                    // Store active context variables locally for use inside dashboard panels
                     localStorage.setItem('student_name', data.name);
                     localStorage.setItem('student_reg', data.registration_number);
                     localStorage.setItem('student_year', data.year_of_study);

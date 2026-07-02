@@ -13,18 +13,28 @@
 
     <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
 
-    <aside id="sidebar">
-        <h2 style="color: var(--accent-gold); margin-bottom: 2rem; font-size: 1.4rem;">🏛️ Kabrite Institute</h2>
+   <aside id="sidebar" style="display: flex; flex-direction: column; min-height: 100vh; padding: 1.5rem; box-sizing: border-box;">
+    <!-- Top Brand Header -->
+    <h2 style="color: var(--accent-gold); margin-bottom: 2rem; font-size: 1.4rem; margin-top: 0;">🏛️ KABRITE UNIVERSITY</h2>
+    
+    <!-- Navigation Links Group -->
+    <div class="nav-group" style="display: flex; flex-direction: column; gap: 0.5rem;">
+        <div class="nav-item active" onclick="loadPage('main.html')">🏠 Dashboard</div>
+        <div class="nav-item" onclick="loadPage('courses.html')">📖 Browse Courses</div>
+        <div class="nav-item" onclick="loadPage('enrollment.html')">📋 My Enrollments</div>
+        <div class="nav-item" onclick="loadPage('lecturer_panel.html')" style="color: #f7ca44; font-weight: 700;">👨‍🏫 Lecturer section</div>
+        <div class="nav-item" id="admin-add-course" style="display: none;" onclick="loadPage('admin.html')">🛠️ Add New Course</div>
+        <div class="nav-item sign-out-btn" onclick="handleSignOut()">Sign out</div>
+    
         
-        <div class="nav-group">
-            <div class="nav-item active" onclick="loadPage('main.html')">🏠 Dashboard</div>
-            <div class="nav-item" onclick="loadPage('courses.html')">📖 Browse Courses</div>
-            <div class="nav-item" onclick="loadPage('enrollment.html')">📋 My Enrollments</div>
-            <div class="nav-item" id="admin-add-course" style="display: none;" onclick="loadPage('admin.html')">🛠️ Add New Course</div>
-      <div class="nav-item sign-out-btn" onclick="handleSignOut()">Sign out</div>
-        </div>
-            
-    </aside>
+    <!-- Pinned Bottom Sidebar Footer -->
+    <div class="sidebar-footer" style="margin-top: 50px; padding-top: 2rem; background-color: rgba(219, 224, 233, 0.88); text-align: center; border-top: 1px solid rgba(0, 0, 0, 0.06) ;padding: 1rem; margin-bottom: 0.5rem; border-radius: 0.5rem; margin-left: -1.5rem; margin-right: -1.5rem;">
+        <p style="font-size: 0.75rem; color: rgba(35, 48, 76, 0.6); margin: 0; font-weight: 600; letter-spacing: 0.02em; line-height: 1.4;">
+            © 2026 Result Hub.<br>All Rights Reserved.
+        </p>
+    </div>
+    </div>
+</aside>
 
     <main id="app-viewport">
         <header id="top-header">

@@ -43,3 +43,7 @@ def course_content_fragment(request):
     
     # 3. Render a lightweight partial HTML file containing your layout structure
     return render(request, 'course_workspace.html', context)
+
+def lecturer_panel_view(request):
+    # Renders the lecturer management HTML fragment smoothly
+    return render(request, 'lecturer_panel.html')
