@@ -26,7 +26,9 @@ SECRET_KEY = 'django-insecure-5=-qh&b70noyib8oqi-spgqm(3ga2-wv97if20&jakuch%r#ax
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# In myLms/settings.py
+
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 
 # Application definition
