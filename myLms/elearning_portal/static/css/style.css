@@ -303,6 +303,7 @@ body {
     color: #ffffff;
     font-size: 1.75rem;
     cursor: pointer;
+    margin-right: 10px;
 }
 
 #sidebar-overlay {
