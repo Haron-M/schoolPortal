@@ -304,6 +304,7 @@ body {
     font-size: 1.75rem;
     cursor: pointer;
     margin-right: 10px;
+    margin-left: -5px;
 }
 
 #sidebar-overlay {
