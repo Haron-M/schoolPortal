@@ -24,7 +24,35 @@
             margin: 0;
             color: #94a3b8;
             line-height: 1.6;
+            
+            /* 💡 Preserves line breaks, paragraph separations, and structural spacing exactly as typed */
+            white-space: pre-wrap; 
         }
+
+        /* 🎨 Contextual overrides to honor rich-text formatting rules if inserted via innerHTML */
+        .workspace-desc strong, .workspace-desc b {
+            color: #ffffff !important;
+            font-weight: 700;
+        }
+        .workspace-desc h1, .workspace-desc h2, .workspace-desc h3 {
+            color: #f7ca44 !important;
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+        .workspace-desc h1 { font-size: 1.6rem; }
+        .workspace-desc h2 { font-size: 1.4rem; }
+        .workspace-desc h3 { font-size: 1.2rem; }
+        
+        .workspace-desc ul, .workspace-desc ol {
+            padding-left: 1.5rem;
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .workspace-desc li {
+            margin-bottom: 0.4rem;
+        }
+
         .modules-grid {
             display: flex;
             flex-direction: column;

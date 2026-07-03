@@ -191,7 +191,9 @@ body {
 }
 
 .avatar-circle {
+
     width: 40px;
+    margin-right: -5px;
     height: 40px;
     border-radius: 50%;
     background-color: rgba(255, 255, 255, 0.15);
@@ -370,8 +372,21 @@ body {
     box-shadow: 0 6px 14px rgba(220, 38, 38, 0.3) !important;
 }
 
+#sidebar {
+    position: fixed;
+
+}
+
 .sidebar-footer {
     background-color: rgba(182, 184, 187, 0.877);
+    position: absolute;
+    bottom: 60px;
+
+    left: 0;
+    right: -20PX;
+    margin-right: -20px;
+
+
 }
 
 @media (max-width: 1024px) {

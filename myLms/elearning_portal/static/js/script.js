@@ -384,14 +384,18 @@ async function synchronizeMyEnrollments() {
     
     <!-- PRIMARY ACTION: Fixed to Emerald Green by default -->
     <button class="action-enter-trigger" style="width: 100% !important; background: #10b981 !important; border: none !important; color: white !important; padding: 0.8rem 1rem; border-radius: 0.6rem; cursor: pointer; font-weight: 700; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 0.4rem; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);">
-        <span>🚪</span> Enter Classroom
+        <span>🚪</span> Enter the course
     </button>
     
-    <!-- DESTRUCTIVE ACTION: Fixed to Ruby Red by default -->
-    <button class="action-drop-trigger" style="width: 60% !important; background: #dc2626 !important; border: none !important; color: #ffffff !important; padding: 0.55rem 1rem; border-radius: 0.5rem; cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: all 0.2s ease; margin-top: 0.25rem; box-shadow: 0 4px 10px rgba(220, 38, 38, 0.15);">
-        Drop Course
-    </button>
-    
+ <!-- DESTRUCTIVE ACTION: Fixed to Ruby Red by default -->
+<button class="action-drop-trigger" style="width: 60% !important; background: #dc2626 !important; border: none !important; color: #ffffff !important; padding: 0.55rem 1rem; border-radius: 0.5rem; cursor: pointer; font-weight: 600; font-size: 0.85rem; transition: all 0.2s ease; margin-top: 0.25rem; box-shadow: 0 4px 10px rgba(220, 38, 38, 0.15); display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;">
+    <!-- Inline SVG X Icon -->
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0;">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+    </svg>
+    Unenrol me
+</button>
 </div>
 </div>
     `;
